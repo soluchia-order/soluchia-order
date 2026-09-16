@@ -247,53 +247,124 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   var STORAGE_KEY = "soluchia-state-v1";
 
   var CATEGORIES = [
-    {id:"antipasti", jp:"前菜", it:"Antipasti"},
-    {id:"insalate", jp:"サラダ", it:"Insalate"},
-    {id:"pasta", jp:"パスタ", it:"Pasta"},
-    {id:"pizza", jp:"ピザ", it:"Pizza"},
-    {id:"secondi", jp:"メイン", it:"Secondi"},
-    {id:"dolci", jp:"ドルチェ", it:"Dolci"},
-    {id:"bevande", jp:"ドリンク", it:"Bevande"}
+    {id:"antipasti", jp:"前菜", en:"Appetizers", it:"Antipasti"},
+    {id:"insalate", jp:"サラダ", en:"Salads", it:"Insalate"},
+    {id:"pasta", jp:"パスタ", en:"Pasta", it:"Pasta"},
+    {id:"pizza", jp:"ピザ", en:"Pizza", it:"Pizza"},
+    {id:"secondi", jp:"メイン", en:"Mains", it:"Secondi"},
+    {id:"dolci", jp:"ドルチェ", en:"Desserts", it:"Dolci"},
+    {id:"bevande", jp:"ドリンク", en:"Drinks", it:"Bevande"}
   ];
 
   var DEFAULT_MENU = [
-    {id:"caprese", category:"antipasti", name:"カプレーゼ", sub:"Caprese", desc:"モッツァレラと完熟トマト、バジル、EXVオリーブオイル", price:980, emoji:"🍅", available:true},
-    {id:"prosciutto", category:"antipasti", name:"自家製生ハム 3種盛り", sub:"Prosciutto misto", desc:"熟成生ハムの食べ比べ", price:1280, emoji:"🥓", available:true},
-    {id:"bruschetta", category:"antipasti", name:"ブルスケッタ 3種", sub:"Bruschetta trio", desc:"トマト、オリーブ、ゴルゴンゾーラ蜂蜜がけ", price:880, emoji:"🍞", available:true},
-    {id:"carpaccio", category:"antipasti", name:"白身魚のカルパッチョ", sub:"Carpaccio di pesce", desc:"本日の白身魚、柑橘のマリネ", price:1180, emoji:"🐟", available:true},
+    {id:"caprese", category:"antipasti", name:"カプレーゼ", name_en:"Caprese Salad", sub:"Caprese", desc:"モッツァレラと完熟トマト、バジル、EXVオリーブオイル", desc_en:"Fresh mozzarella and ripe tomato with basil and extra virgin olive oil", price:980, emoji:"🍅", available:true},
+    {id:"prosciutto", category:"antipasti", name:"自家製生ハム 3種盛り", name_en:"Trio of Cured Ham", sub:"Prosciutto misto", desc:"熟成生ハムの食べ比べ", desc_en:"A tasting of our aged prosciutto", price:1280, emoji:"🥓", available:true},
+    {id:"bruschetta", category:"antipasti", name:"ブルスケッタ 3種", name_en:"Bruschetta Trio", sub:"Bruschetta trio", desc:"トマト、オリーブ、ゴルゴンゾーラ蜂蜜がけ", desc_en:"Tomato, olive, and gorgonzola with honey", price:880, emoji:"🍞", available:true},
+    {id:"carpaccio", category:"antipasti", name:"白身魚のカルパッチョ", name_en:"White Fish Carpaccio", sub:"Carpaccio di pesce", desc:"本日の白身魚、柑橘のマリネ", desc_en:"Today's white fish marinated with citrus", price:1180, emoji:"🐟", available:true},
 
-    {id:"mista", category:"insalate", name:"彩り野菜のサラダ", sub:"Insalata mista", desc:"季節野菜のバルサミコドレッシング", price:780, emoji:"🥗", available:true},
-    {id:"caesar", category:"insalate", name:"シーザーサラダ", sub:"Insalata Caesar", desc:"自家製ドレッシングとパルミジャーノ", price:880, emoji:"🥬", available:true},
+    {id:"mista", category:"insalate", name:"彩り野菜のサラダ", name_en:"Mixed Green Salad", sub:"Insalata mista", desc:"季節野菜のバルサミコドレッシング", desc_en:"Seasonal vegetables with balsamic dressing", price:780, emoji:"🥗", available:true},
+    {id:"caesar", category:"insalate", name:"シーザーサラダ", name_en:"Caesar Salad", sub:"Insalata Caesar", desc:"自家製ドレッシングとパルミジャーノ", desc_en:"House-made dressing with Parmigiano", price:880, emoji:"🥬", available:true},
 
-    {id:"bolognese", category:"pasta", name:"自家製タリアテッレ ボロネーゼ", sub:"Tagliatelle al ragù", desc:"牛肉を4時間煮込んだ濃厚ソース", price:1580, emoji:"🍝", available:true},
-    {id:"carbonara", category:"pasta", name:"カルボナーラ", sub:"Carbonara", desc:"卵黄、グアンチャーレ、ペコリーノ", price:1480, emoji:"🍝", available:true},
-    {id:"peperoncino", category:"pasta", name:"ペペロンチーノ", sub:"Aglio e olio e peperoncino", desc:"にんにくと唐辛子のシンプルな一皿", price:1280, emoji:"🌶️", available:true},
-    {id:"granchio", category:"pasta", name:"渡り蟹のトマトクリームパスタ", sub:"Granchio in crema di pomodoro", desc:"渡り蟹の旨味を凝縮", price:1980, emoji:"🦀", available:true},
-    {id:"riccio", category:"pasta", name:"雲丹とレモンのクリームパスタ", sub:"Riccio di mare al limone", desc:"数量限定・季節のスペシャリテ", price:2380, emoji:"🍋", available:false},
+    {id:"bolognese", category:"pasta", name:"自家製タリアテッレ ボロネーゼ", name_en:"Tagliatelle al Ragù", sub:"Tagliatelle al ragù", desc:"牛肉を4時間煮込んだ濃厚ソース", desc_en:"Slow-simmered beef ragù, a 4-hour reduction", price:1580, emoji:"🍝", available:true},
+    {id:"carbonara", category:"pasta", name:"カルボナーラ", name_en:"Carbonara", sub:"Carbonara", desc:"卵黄、グアンチャーレ、ペコリーノ", desc_en:"Egg yolk, guanciale, and Pecorino", price:1480, emoji:"🍝", available:true},
+    {id:"peperoncino", category:"pasta", name:"ペペロンチーノ", name_en:"Aglio e Olio e Peperoncino", sub:"Aglio e olio e peperoncino", desc:"にんにくと唐辛子のシンプルな一皿", desc_en:"A simple dish of garlic and chili", price:1280, emoji:"🌶️", available:true},
+    {id:"granchio", category:"pasta", name:"渡り蟹のトマトクリームパスタ", name_en:"Crab Tomato Cream Pasta", sub:"Granchio in crema di pomodoro", desc:"渡り蟹の旨味を凝縮", desc_en:"Rich flavor of blue crab in tomato cream", price:1980, emoji:"🦀", available:true},
+    {id:"riccio", category:"pasta", name:"雲丹とレモンのクリームパスタ", name_en:"Sea Urchin & Lemon Cream Pasta", sub:"Riccio di mare al limone", desc:"数量限定・季節のスペシャリテ", desc_en:"Limited-quantity seasonal specialty", price:2380, emoji:"🍋", available:false},
 
-    {id:"margherita", category:"pizza", name:"マルゲリータ", sub:"Margherita", desc:"サンマルツァーノトマトと水牛モッツァレラ", price:1480, emoji:"🍕", available:true},
-    {id:"quattro", category:"pizza", name:"クアトロフォルマッジ", sub:"Quattro formaggi", desc:"4種のチーズと蜂蜜がけ", price:1780, emoji:"🍕", available:true},
-    {id:"diavola", category:"pizza", name:"ディアボラ", sub:"Diavola", desc:"サラミピカンテと辛味オイル", price:1680, emoji:"🍕", available:true},
+    {id:"margherita", category:"pizza", name:"マルゲリータ", name_en:"Margherita", sub:"Margherita", desc:"サンマルツァーノトマトと水牛モッツァレラ", desc_en:"San Marzano tomato and buffalo mozzarella", price:1480, emoji:"🍕", available:true},
+    {id:"quattro", category:"pizza", name:"クアトロフォルマッジ", name_en:"Quattro Formaggi", sub:"Quattro formaggi", desc:"4種のチーズと蜂蜜がけ", desc_en:"Four cheeses drizzled with honey", price:1780, emoji:"🍕", available:true},
+    {id:"diavola", category:"pizza", name:"ディアボラ", name_en:"Diavola", sub:"Diavola", desc:"サラミピカンテと辛味オイル", desc_en:"Spicy salami with chili oil", price:1680, emoji:"🍕", available:true},
 
-    {id:"agnello", category:"secondi", name:"仔羊のロースト", sub:"Agnello arrosto", desc:"ローズマリー風味、赤ワインソース", price:2480, emoji:"🍖", available:true},
-    {id:"tagliata", category:"secondi", name:"牛フィレ肉のタリアータ", sub:"Tagliata di manzo", desc:"ルッコラとパルミジャーノを添えて", price:2980, emoji:"🥩", available:true},
-    {id:"acquapazza", category:"secondi", name:"白身魚のアクアパッツァ", sub:"Pesce all'acqua pazza", desc:"トマトとオリーブの旨味スープ仕立て", price:2280, emoji:"🐠", available:true},
+    {id:"agnello", category:"secondi", name:"仔羊のロースト", name_en:"Roasted Lamb", sub:"Agnello arrosto", desc:"ローズマリー風味、赤ワインソース", desc_en:"Rosemary-scented, with red wine sauce", price:2480, emoji:"🍖", available:true},
+    {id:"tagliata", category:"secondi", name:"牛フィレ肉のタリアータ", name_en:"Beef Tagliata", sub:"Tagliata di manzo", desc:"ルッコラとパルミジャーノを添えて", desc_en:"Sliced beef fillet with arugula and Parmigiano", price:2980, emoji:"🥩", available:true},
+    {id:"acquapazza", category:"secondi", name:"白身魚のアクアパッツァ", name_en:"Fish Acqua Pazza", sub:"Pesce all'acqua pazza", desc:"トマトとオリーブの旨味スープ仕立て", desc_en:"White fish in a savory tomato and olive broth", price:2280, emoji:"🐠", available:true},
 
-    {id:"tiramisu", category:"dolci", name:"ティラミス", sub:"Tiramisù", desc:"自家製、エスプレッソをたっぷりと", price:780, emoji:"🍮", available:true},
-    {id:"pannacotta", category:"dolci", name:"パンナコッタ", sub:"Panna cotta", desc:"季節のベリーソース", price:680, emoji:"🍨", available:true},
-    {id:"gelato", category:"dolci", name:"ジェラート 3種盛り", sub:"Gelato misto", desc:"本日のフレーバーからお選びいただけます", price:750, emoji:"🍦", available:true},
+    {id:"tiramisu", category:"dolci", name:"ティラミス", name_en:"Tiramisù", sub:"Tiramisù", desc:"自家製、エスプレッソをたっぷりと", desc_en:"House-made, generously soaked in espresso", price:780, emoji:"🍮", available:true},
+    {id:"pannacotta", category:"dolci", name:"パンナコッタ", name_en:"Panna Cotta", sub:"Panna cotta", desc:"季節のベリーソース", desc_en:"Seasonal berry sauce", price:680, emoji:"🍨", available:true},
+    {id:"gelato", category:"dolci", name:"ジェラート 3種盛り", name_en:"Gelato Trio", sub:"Gelato misto", desc:"本日のフレーバーからお選びいただけます", desc_en:"Choose from today's flavors", price:750, emoji:"🍦", available:true},
 
-    {id:"water", category:"bevande", name:"イタリア産スパークリングウォーター", sub:"Acqua frizzante", desc:"", price:480, emoji:"🫧", available:true},
-    {id:"housewine", category:"bevande", name:"ハウスワイン グラス(赤/白)", sub:"Vino della casa", desc:"", price:780, emoji:"🍷", available:true},
-    {id:"espresso", category:"bevande", name:"エスプレッソ", sub:"Espresso", desc:"", price:450, emoji:"☕", available:true},
-    {id:"cappuccino", category:"bevande", name:"カプチーノ", sub:"Cappuccino", desc:"", price:550, emoji:"☕", available:true}
+    {id:"water", category:"bevande", name:"イタリア産スパークリングウォーター", name_en:"Italian Sparkling Water", sub:"Acqua frizzante", desc:"", desc_en:"", price:480, emoji:"🫧", available:true},
+    {id:"housewine", category:"bevande", name:"ハウスワイン グラス(赤/白)", name_en:"House Wine, Glass (Red/White)", sub:"Vino della casa", desc:"", desc_en:"", price:780, emoji:"🍷", available:true},
+    {id:"espresso", category:"bevande", name:"エスプレッソ", name_en:"Espresso", sub:"Espresso", desc:"", desc_en:"", price:450, emoji:"☕", available:true},
+    {id:"cappuccino", category:"bevande", name:"カプチーノ", name_en:"Cappuccino", sub:"Cappuccino", desc:"", desc_en:"", price:550, emoji:"☕", available:true}
   ];
 
   var STATUS = {
-    received:{label:"受付済み", cls:"st-received"},
-    cooking:{label:"調理中", cls:"st-cooking"},
-    done:{label:"提供完了", cls:"st-done"}
+    received:{label:"受付済み", label_en:"Received", cls:"st-received"},
+    cooking:{label:"調理中", label_en:"Cooking", cls:"st-cooking"},
+    done:{label:"提供完了", label_en:"Ready", cls:"st-done"}
   };
+
+  // UI strings shown outside the menu data itself. English customers get
+  // this dictionary; new items added later from the admin page won't have
+  // name_en/desc_en, so item text always falls back to Japanese (see
+  // itemName()/itemDesc() below) rather than showing blank/undefined.
+  var STR = {
+    ja: {
+      brandTag: "本格イタリアン食堂",
+      gateTitle: "テーブルのQRコードを読み取ってください",
+      gateBody1: "ご注文には、お手元のテーブルに設置されているQRコードの読み取りが必要です。テーブル番号の手入力ではご利用いただけません。",
+      gateBody2: "QRコードが見当たらない場合は、お近くのスタッフにお声がけください。",
+      table: function(n){ return "🪑 " + n + "番テーブル"; },
+      addedToCart: "点をカートに追加",
+      viewCart: "→ カートを見る",
+      cartTitle: "ご注文カート",
+      cartEmpty: "カートは空です。<br>メニューから商品を選んでください。",
+      noteLabel: "ご要望・アレルギー等（任意）",
+      notePlaceholder: "例：辛さ控えめでお願いします",
+      subtotal: "小計",
+      total: "合計",
+      rateLimited: "短時間に注文が集中したため、一時的にご注文を制限しています。少し時間をおいて再度お試しいただくか、お近くのスタッフにお声がけください。",
+      placeOrder: "この内容で注文する",
+      soldOut: "本日売り切れ",
+      decreaseQty: "数量を減らす",
+      increaseQty: "数量を増やす",
+      addToCart: "カートに追加",
+      remove: "削除",
+      back: "戻る",
+      thankYou: "ご注文ありがとうございます",
+      orderNo: function(id, table){ return "注文番号 No." + id + "　（" + table + "番テーブル）"; },
+      statusNote: "状況はこの画面で自動的に更新されます",
+      orderMore: "追加で注文する",
+      orderNotFound: "注文情報が見つかりませんでした。",
+      backToMenu: "メニューに戻る",
+      langToggle: "EN"
+    },
+    en: {
+      brandTag: "Authentic Italian Trattoria",
+      gateTitle: "Please scan the QR code at your table",
+      gateBody1: "To place an order, please scan the QR code at your table. Entering a table number manually is not available.",
+      gateBody2: "If you can't find the QR code, please ask a staff member for help.",
+      table: function(n){ return "🪑 Table " + n; },
+      addedToCart: "items added",
+      viewCart: "View Cart →",
+      cartTitle: "Your Cart",
+      cartEmpty: "Your cart is empty.<br>Please select items from the menu.",
+      noteLabel: "Special requests / allergies (optional)",
+      notePlaceholder: "e.g. Please make it less spicy",
+      subtotal: "Subtotal",
+      total: "Total",
+      rateLimited: "Ordering has been temporarily limited due to a high number of recent orders. Please wait a moment and try again, or ask a staff member for help.",
+      placeOrder: "Place Order",
+      soldOut: "Sold Out Today",
+      decreaseQty: "Decrease quantity",
+      increaseQty: "Increase quantity",
+      addToCart: "Add to cart",
+      remove: "Remove",
+      back: "Back",
+      thankYou: "Thank you for your order",
+      orderNo: function(id, table){ return "Order No. " + id + " (Table " + table + ")"; },
+      statusNote: "This screen updates automatically",
+      orderMore: "Order More",
+      orderNotFound: "Order information not found.",
+      backToMenu: "Back to Menu",
+      langToggle: "日本語"
+    }
+  };
+  function t(key){ return STR[state.lang === "en" ? "en" : "ja"][key]; }
+  function itemName(item){ return (state.lang === "en" && item.name_en) ? item.name_en : item.name; }
+  function itemDesc(item){ return (state.lang === "en" && item.name_en) ? (item.desc_en || "") : (item.desc || ""); }
+  function categoryLabel(c){ return state.lang === "en" ? c.en : c.jp; }
 
   function loadState(){
     var fallback = {
@@ -305,7 +376,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       menu:JSON.parse(JSON.stringify(DEFAULT_MENU)),
       orders:[],
       lastOrderId:null,
-      orderBlocked:false
+      orderBlocked:false,
+      lang:"ja"
     };
     try{
       var raw = localStorage.getItem(STORAGE_KEY);
@@ -404,7 +476,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       note: state.note,
       activeCategory: state.activeCategory,
       customerScreen: state.customerScreen,
-      lastOrderId: state.lastOrderId
+      lastOrderId: state.lastOrderId,
+      lang: state.lang
     });
   }
 
@@ -432,12 +505,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   function renderTableSelect(){
     return (
       '<div class="phone-head">' +
-        '<div><div class="brand-name it-display">Soluchia</div><div class="brand-tag">本格イタリアン食堂</div></div>' +
+        '<div><div class="brand-name it-display">Soluchia</div><div class="brand-tag">'+esc(t("brandTag"))+'</div></div>' +
+        '<button class="table-chip" data-action="toggle-lang">'+esc(t("langToggle"))+'</button>' +
       '</div>' +
       '<div class="sheet-body">' +
-        '<h2 class="jp-display" style="font-size:1.15rem;">テーブルのQRコードを読み取ってください</h2>' +
-        '<p class="table-intro">ご注文には、お手元のテーブルに設置されているQRコードの読み取りが必要です。テーブル番号の手入力ではご利用いただけません。</p>' +
-        '<p class="table-intro">QRコードが見当たらない場合は、お近くのスタッフにお声がけください。</p>' +
+        '<h2 class="jp-display" style="font-size:1.15rem;">'+esc(t("gateTitle"))+'</h2>' +
+        '<p class="table-intro">'+esc(t("gateBody1"))+'</p>' +
+        '<p class="table-intro">'+esc(t("gateBody2"))+'</p>' +
       '</div>'
     );
   }
@@ -448,7 +522,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       var items = state.menu.filter(function(m){ return m.category===c.id; });
       return (
         '<div class="cat-heading" id="cat-'+c.id+'">' +
-          '<span class="jp jp-display">'+esc(c.jp)+'</span>' +
+          '<span class="jp jp-display">'+esc(categoryLabel(c))+'</span>' +
           '<span class="it it-display">'+esc(c.it)+'</span>' +
         '</div>' +
         items.map(renderItemCard).join('')
@@ -458,17 +532,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     var count = cartCount();
     return (
       '<div class="phone-head">' +
-        '<div><div class="brand-name it-display">Soluchia</div><div class="brand-tag">本格イタリアン食堂</div></div>' +
-        '<button class="table-chip" data-action="change-table">🪑 '+esc(state.tableNumber)+'番テーブル</button>' +
+        '<div><div class="brand-name it-display">Soluchia</div><div class="brand-tag">'+esc(t("brandTag"))+'</div></div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">' +
+          '<button class="table-chip" data-action="change-table">'+esc(t("table")(state.tableNumber))+'</button>' +
+          '<button class="table-chip" data-action="toggle-lang">'+esc(t("langToggle"))+'</button>' +
+        '</div>' +
       '</div>' +
       '<div class="cat-row">' +
         cats.map(function(c){
-          return '<button class="cat-pill'+(c.id===state.activeCategory?' active':'')+'" data-action="set-cat" data-id="'+c.id+'">'+esc(c.jp)+'</button>';
+          return '<button class="cat-pill'+(c.id===state.activeCategory?' active':'')+'" data-action="set-cat" data-id="'+c.id+'">'+esc(categoryLabel(c))+'</button>';
         }).join('') +
       '</div>' +
       '<div class="menu-scroll">' + sections + '</div>' +
       (count>0 ?
-        '<button class="cart-bar" data-action="open-cart"><span><span class="count tabular">'+count+'</span>点をカートに追加</span><span class="cta tabular">'+yen(cartTotal())+' → カートを見る</span></button>'
+        '<button class="cart-bar" data-action="open-cart"><span><span class="count tabular">'+count+'</span>'+esc(t("addedToCart"))+'</span><span class="cta tabular">'+yen(cartTotal())+' '+esc(t("viewCart"))+'</span></button>'
         : '')
     );
   }
@@ -478,23 +555,24 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     var qty = qtyInCart ? qtyInCart.qty : 0;
     var controls;
     if(!item.available){
-      controls = '<span class="sold-badge">本日売り切れ</span>';
+      controls = '<span class="sold-badge">'+esc(t("soldOut"))+'</span>';
     } else if(qty>0){
       controls = '<div class="stepper">' +
-        '<button data-action="dec" data-id="'+item.id+'" aria-label="数量を減らす">−</button>' +
+        '<button data-action="dec" data-id="'+item.id+'" aria-label="'+esc(t("decreaseQty"))+'">−</button>' +
         '<span class="qty-num tabular">'+qty+'</span>' +
-        '<button data-action="inc" data-id="'+item.id+'" aria-label="数量を増やす">+</button>' +
+        '<button data-action="inc" data-id="'+item.id+'" aria-label="'+esc(t("increaseQty"))+'">+</button>' +
       '</div>';
     } else {
-      controls = '<button class="add-btn" data-action="inc" data-id="'+item.id+'" aria-label="カートに追加">+</button>';
+      controls = '<button class="add-btn" data-action="inc" data-id="'+item.id+'" aria-label="'+esc(t("addToCart"))+'">+</button>';
     }
+    var desc = itemDesc(item);
     return (
       '<div class="item-card'+(item.available?'':' unavailable')+'">' +
         '<div class="item-emoji">'+item.emoji+'</div>' +
         '<div class="item-body">' +
-          '<div class="item-name">'+esc(item.name)+'</div>' +
+          '<div class="item-name">'+esc(itemName(item))+'</div>' +
           '<div class="item-sub it-display">'+esc(item.sub)+'</div>' +
-          (item.desc ? '<div class="item-desc">'+esc(item.desc)+'</div>' : '') +
+          (desc ? '<div class="item-desc">'+esc(desc)+'</div>' : '') +
           '<div class="item-foot"><span class="item-price tabular">'+yen(item.price)+'</span>'+controls+'</div>' +
         '</div>' +
       '</div>'
@@ -504,8 +582,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   function renderCart(){
     if(state.cart.length===0){
       return (
-        '<div class="sheet-head"><button class="back-btn" data-action="back-to-menu" aria-label="戻る">←</button><div class="sheet-title">ご注文カート</div></div>' +
-        '<div class="sheet-body"><div class="empty-note">カートは空です。<br>メニューから商品を選んでください。</div></div>'
+        '<div class="sheet-head"><button class="back-btn" data-action="back-to-menu" aria-label="'+esc(t("back"))+'">←</button><div class="sheet-title">'+esc(t("cartTitle"))+'</div></div>' +
+        '<div class="sheet-body"><div class="empty-note">'+t("cartEmpty")+'</div></div>'
       );
     }
     var rows = state.cart.map(function(c){
@@ -515,7 +593,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         '<div class="cart-row">' +
           '<div class="item-emoji">'+it.emoji+'</div>' +
           '<div class="item-body">' +
-            '<div class="cart-row-name">'+esc(it.name)+'</div>' +
+            '<div class="cart-row-name">'+esc(itemName(it))+'</div>' +
             '<div class="cart-row-price tabular">'+yen(it.price)+' × '+c.qty+' = '+yen(it.price*c.qty)+'</div>' +
             '<div class="stepper" style="margin-top:8px;">' +
               '<button data-action="dec" data-id="'+it.id+'">−</button>' +
@@ -523,24 +601,24 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
               '<button data-action="inc" data-id="'+it.id+'">+</button>' +
             '</div>' +
           '</div>' +
-          '<button class="trash-btn" data-action="remove" data-id="'+it.id+'" aria-label="削除">🗑</button>' +
+          '<button class="trash-btn" data-action="remove" data-id="'+it.id+'" aria-label="'+esc(t("remove"))+'">🗑</button>' +
         '</div>'
       );
     }).join('');
 
     return (
-      '<div class="sheet-head"><button class="back-btn" data-action="back-to-menu" aria-label="戻る">←</button><div class="sheet-title">ご注文カート</div></div>' +
+      '<div class="sheet-head"><button class="back-btn" data-action="back-to-menu" aria-label="'+esc(t("back"))+'">←</button><div class="sheet-title">'+esc(t("cartTitle"))+'</div></div>' +
       '<div class="sheet-body">' +
         rows +
-        '<label style="display:block;margin-top:var(--sp-4);font-size:.78rem;color:var(--ink-soft);">ご要望・アレルギー等（任意）</label>' +
-        '<textarea class="note-field" data-action="note" placeholder="例：辛さ控えめでお願いします">'+esc(state.note||'')+'</textarea>' +
-        '<div class="summary-line" style="margin-top:var(--sp-4);"><span>小計</span><span class="tabular">'+yen(cartTotal())+'</span></div>' +
-        '<div class="summary-total"><span>合計</span><span class="tabular">'+yen(cartTotal())+'</span></div>' +
+        '<label style="display:block;margin-top:var(--sp-4);font-size:.78rem;color:var(--ink-soft);">'+esc(t("noteLabel"))+'</label>' +
+        '<textarea class="note-field" data-action="note" placeholder="'+esc(t("notePlaceholder"))+'">'+esc(state.note||'')+'</textarea>' +
+        '<div class="summary-line" style="margin-top:var(--sp-4);"><span>'+esc(t("subtotal"))+'</span><span class="tabular">'+yen(cartTotal())+'</span></div>' +
+        '<div class="summary-total"><span>'+esc(t("total"))+'</span><span class="tabular">'+yen(cartTotal())+'</span></div>' +
         (state.orderBlocked ?
-          '<p style="font-size:.78rem;color:var(--alert);background:var(--alert-bg);border-radius:var(--r-sm);padding:10px 12px;margin-top:var(--sp-3);line-height:1.6;">短時間に注文が集中したため、一時的にご注文を制限しています。少し時間をおいて再度お試しいただくか、お近くのスタッフにお声がけください。</p>'
+          '<p style="font-size:.78rem;color:var(--alert);background:var(--alert-bg);border-radius:var(--r-sm);padding:10px 12px;margin-top:var(--sp-3);line-height:1.6;">'+esc(t("rateLimited"))+'</p>'
           : '') +
       '</div>' +
-      '<div class="sheet-foot"><button class="primary-btn" data-action="place-order">この内容で注文する</button></div>'
+      '<div class="sheet-foot"><button class="primary-btn" data-action="place-order">'+esc(t("placeOrder"))+'</button></div>'
     );
   }
 
@@ -548,11 +626,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     var order = state.orders.find(function(o){ return o.id===state.lastOrderId; });
     if(!order){
       return (
-        '<div class="sheet-body"><div class="empty-note">注文情報が見つかりませんでした。</div></div>' +
-        '<div class="sheet-foot"><button class="ghost-btn" data-action="back-to-menu">メニューに戻る</button></div>'
+        '<div class="sheet-body"><div class="empty-note">'+esc(t("orderNotFound"))+'</div></div>' +
+        '<div class="sheet-foot"><button class="ghost-btn" data-action="back-to-menu">'+esc(t("backToMenu"))+'</button></div>'
       );
     }
     var st = STATUS[order.status];
+    var stLabel = state.lang === "en" ? st.label_en : st.label;
     var recap = order.items.map(function(i){
       return '<div class="recap-row"><span>'+esc(i.name)+' × '+i.qty+'</span><span class="tabular">'+yen(i.price*i.qty)+'</span></div>';
     }).join('');
@@ -560,16 +639,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       '<div class="sheet-body">' +
         '<div class="confirm-wrap">' +
           '<div class="confirm-check">✓</div>' +
-          '<h2 class="jp-display" style="font-size:1.2rem;">ご注文ありがとうございます</h2>' +
-          '<div class="confirm-order-no">注文番号 No.'+order.id+'　（'+esc(order.tableNumber)+'番テーブル）</div>' +
-          '<div class="status-pill '+st.cls+'">● '+st.label+'</div>' +
-          '<p style="font-size:.8rem;color:var(--ink-soft);">状況はこの画面で自動的に更新されます</p>' +
+          '<h2 class="jp-display" style="font-size:1.2rem;">'+esc(t("thankYou"))+'</h2>' +
+          '<div class="confirm-order-no">'+esc(t("orderNo")(order.id, order.tableNumber))+'</div>' +
+          '<div class="status-pill '+st.cls+'">● '+esc(stLabel)+'</div>' +
+          '<p style="font-size:.8rem;color:var(--ink-soft);">'+esc(t("statusNote"))+'</p>' +
           '<div class="recap">' + recap +
-            '<div class="recap-row" style="font-weight:700;color:var(--ink);border-top:1px solid var(--line);padding-top:8px;margin-top:4px;"><span>合計</span><span class="tabular">'+yen(order.total)+'</span></div>' +
+            '<div class="recap-row" style="font-weight:700;color:var(--ink);border-top:1px solid var(--line);padding-top:8px;margin-top:4px;"><span>'+esc(t("total"))+'</span><span class="tabular">'+yen(order.total)+'</span></div>' +
           '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="sheet-foot"><button class="primary-btn" data-action="order-more">追加で注文する</button></div>'
+      '<div class="sheet-foot"><button class="primary-btn" data-action="order-more">'+esc(t("orderMore"))+'</button></div>'
     );
   }
 
@@ -598,7 +677,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     state.orderBlocked = false;
     var items = state.cart.map(function(c){
       var it = findItem(c.itemId);
-      return {name:it.name, price:it.price, qty:c.qty};
+      return {name:itemName(it), price:it.price, qty:c.qty};
     });
     var newId = fresh.reduce(function(m,o){ return Math.max(m, o.id); }, 0) + 1;
     var order = {
@@ -628,6 +707,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     switch(action){
       case "change-table":
         state.tableNumber = null;
+        break;
+      case "toggle-lang":
+        state.lang = state.lang === "en" ? "ja" : "en";
         break;
       case "set-cat":
         state.activeCategory = id;
