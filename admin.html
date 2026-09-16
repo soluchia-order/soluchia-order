@@ -195,6 +195,27 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .qr-url{font-size:.66rem;color:var(--ink-soft);margin-top:10px;word-break:break-all;line-height:1.5;}
 .qr-section-title{font-family:"Shippori Mincho B1",serif;font-size:1.05rem;margin-bottom:var(--sp-3);}
 
+.login-gate{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:var(--sp-4);}
+.login-card{
+  width:100%;max-width:340px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:var(--sp-6) var(--sp-5);box-shadow:var(--shadow-pop);display:flex;flex-direction:column;gap:var(--sp-3);
+  text-align:center;
+}
+.login-title{font-size:1.6rem;}
+.login-sub{font-size:.8rem;color:var(--ink-soft);line-height:1.6;margin-bottom:var(--sp-2);}
+.login-card input{
+  width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;font-size:.95rem;
+  background:var(--bg);color:var(--ink);text-align:center;letter-spacing:.05em;
+}
+.login-card button{
+  width:100%;background:var(--accent);color:var(--accent-ink);border:none;border-radius:var(--r-sm);
+  padding:12px;font-size:.9rem;font-weight:700;cursor:pointer;
+}
+.login-card button:disabled{opacity:.6;cursor:default;}
+.login-error{font-size:.78rem;color:var(--alert);background:var(--alert-bg);border-radius:var(--r-sm);padding:8px 10px;}
+
+.settings-panel{max-width:520px;}
+
 @media (max-width:760px){
   .admin-layout{grid-template-columns:1fr;}
   .admin-nav{flex-direction:row;position:static;overflow-x:auto;}
@@ -248,6 +269,108 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     {number:7, token:"AUHB9F"}, {number:8, token:"Y3XKQG"}, {number:9, token:"LWR468"},
     {number:10, token:"3F6K59"}, {number:11, token:"GCHB26"}, {number:12, token:"2J4A75"}
   ];
+
+  // --- Admin login gate -----------------------------------------------
+  // This is a static, backend-less page, so this is a deterrent (keeps
+  // casual QR scans and curious customers out) rather than real access
+  // control — anyone who inspects the page source and puts in the work
+  // could bypass it. We never store the password itself, only a SHA-256
+  // hash, and we compare hashes rather than plain text.
+  var ADMIN_SESSION_KEY = "soluchia-admin-session-v1";
+  var ADMIN_SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours — about one shift
+  // SHA-256 of the initial default password "soluchia2026". Changing the
+  // password from the 設定 tab overwrites `adminPasswordHash` in this
+  // browser's shared storage — this constant stays as the fallback for a
+  // fresh browser/device that has never set its own password.
+  var DEFAULT_ADMIN_PASSWORD_HASH = "610b00b0986661225caaa7220ae6857a8a3e5825a6eeced1ce92e770ca209cee";
+
+  // Self-contained SHA-256 (no window.crypto.subtle dependency). subtle.digest
+  // only works in a "secure context", which some browsers do NOT consider a
+  // locally-opened file:// page to be — that left the login button stuck on
+  // "確認中…" with no way in. This pure-JS version works identically on any
+  // browser, https or not, so login can't silently break like that again.
+  function utf8Bytes(str){
+    try{ return unescape(encodeURIComponent(str)); }
+    catch(e){ return str; }
+  }
+  function sha256Hex(text){
+    var str = utf8Bytes(String(text));
+    function rrot(v, n){ return (v>>>n) | (v<<(32-n)); }
+    var maxWord = Math.pow(2,32);
+    var h = [], k = [];
+    var primeCount = 0;
+    var isComposite = {};
+    for(var candidate=2; primeCount<64; candidate++){
+      if(!isComposite[candidate]){
+        for(var i=0;i<313;i+=candidate){ isComposite[i]=candidate; }
+        h[primeCount] = (Math.pow(candidate,0.5)*maxWord)|0;
+        k[primeCount++] = (Math.pow(candidate,1/3)*maxWord)|0;
+      }
+    }
+    str += "\x80";
+    while(str.length % 64 - 56){ str += "\x00"; }
+    var words = [];
+    for(i=0;i<str.length;i++){
+      var c = str.charCodeAt(i);
+      words[i>>2] |= c << ((3-(i%4))*8);
+    }
+    var originalByteLen = utf8Bytes(String(text)).length;
+    var originalBitLen = originalByteLen*8;
+    words[words.length] = Math.floor(originalBitLen/maxWord);
+    words[words.length] = originalBitLen;
+
+    for(var j=0;j<words.length;){
+      var w = words.slice(j, j+=16);
+      var old = h;
+      h = h.slice(0,8);
+      for(i=0;i<64;i++){
+        var w15 = w[i-15], w2 = w[i-2];
+        var a = h[0], e = h[4];
+        var t1 = h[7]
+          + (rrot(e,6) ^ rrot(e,11) ^ rrot(e,25))
+          + ((e & h[5]) ^ (~e & h[6]))
+          + k[i]
+          + (w[i] = (i<16) ? w[i] : (
+              w[i-16]
+              + (rrot(w15,7) ^ rrot(w15,18) ^ (w15>>>3))
+              + w[i-7]
+              + (rrot(w2,17) ^ rrot(w2,19) ^ (w2>>>10))
+            )|0
+          );
+        var t2 = (rrot(a,2) ^ rrot(a,13) ^ rrot(a,22))
+          + ((a & h[1]) ^ (a & h[2]) ^ (h[1] & h[2]));
+        h = [(t1+t2)|0].concat(h);
+        h[4] = (h[4]+t1)|0;
+      }
+      for(i=0;i<8;i++){ h[i] = (h[i]+old[i])|0; }
+    }
+
+    var result = "";
+    for(i=0;i<8;i++){
+      for(var b=3;b+1;b--){
+        var byte = (h[i]>>(b*8)) & 255;
+        result += (byte<16 ? "0" : "") + byte.toString(16);
+      }
+    }
+    return result;
+  }
+
+  function isSessionValid(){
+    try{
+      var raw = localStorage.getItem(ADMIN_SESSION_KEY);
+      if(!raw) return false;
+      var parsed = JSON.parse(raw);
+      return !!(parsed && typeof parsed.expiresAt === "number" && Date.now() < parsed.expiresAt);
+    }catch(e){ return false; }
+  }
+  function startSession(){
+    try{
+      localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({expiresAt: Date.now() + ADMIN_SESSION_DURATION_MS}));
+    }catch(e){ /* ignore */ }
+  }
+  function clearSession(){
+    try{ localStorage.removeItem(ADMIN_SESSION_KEY); }catch(e){ /* ignore */ }
+  }
 
   var CATEGORIES = [
     {id:"antipasti", jp:"前菜", it:"Antipasti"},
@@ -306,7 +429,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       adminTab: "orders",
       editingId: null,
       tableTokens: JSON.parse(JSON.stringify(DEFAULT_TABLE_TOKENS)),
-      tableTokensRotatedAt: null
+      tableTokensRotatedAt: null,
+      adminPasswordHash: DEFAULT_ADMIN_PASSWORD_HASH
     };
     try{
       var raw = localStorage.getItem(STORAGE_KEY);
@@ -317,6 +441,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       if(Array.isArray(parsed.orders)) fallback.orders = parsed.orders;
       if(Array.isArray(parsed.tableTokens) && parsed.tableTokens.length) fallback.tableTokens = parsed.tableTokens;
       if(parsed.tableTokensRotatedAt) fallback.tableTokensRotatedAt = parsed.tableTokensRotatedAt;
+      if(typeof parsed.adminPasswordHash === "string" && parsed.adminPasswordHash) fallback.adminPasswordHash = parsed.adminPasswordHash;
       return fallback;
     }catch(e){
       return fallback;
@@ -324,6 +449,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
 
   var state = loadState();
+  state.authed = isSessionValid();
+  state.loginError = null;
+  state.settingsMsg = null;
+  state.settingsMsgOk = false;
 
   function persistFields(fields){
     try{
@@ -355,9 +484,29 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   function findItem(id){ return state.menu.find(function(m){return m.id===id;}); }
 
   function render(){
+    if(!state.authed){
+      document.getElementById("page").innerHTML = renderLoginGate();
+      var pwField = document.getElementById("login-password");
+      if(pwField) pwField.focus();
+      return;
+    }
     document.getElementById("page").innerHTML = renderAdmin();
     persistFields({menu: state.menu});
     if(state.adminTab === "qr"){ populateQRCodes(); }
+  }
+
+  function renderLoginGate(){
+    return (
+      '<div class="login-gate">' +
+        '<form id="login-form" class="login-card">' +
+          '<div class="login-title jp-display">Soluchia</div>' +
+          '<div class="login-sub">スタッフ用の管理画面です。パスワードを入力してください。</div>' +
+          '<input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">' +
+          (state.loginError ? '<div class="login-error">'+esc(state.loginError)+'</div>' : '') +
+          '<button type="submit">ログイン</button>' +
+        '</form>' +
+      '</div>'
+    );
   }
 
   function populateQRCodes(){
@@ -380,21 +529,42 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   function renderAdmin(){
     var body = state.adminTab === "menu" ? renderAdminMenu()
       : state.adminTab === "qr" ? renderAdminQR()
+      : state.adminTab === "settings" ? renderAdminSettings()
       : renderAdminOrders();
     return (
       '<div class="admin">' +
         '<div class="admin-head">' +
           '<div><div class="admin-title jp-display">Soluchia ・ 管理画面</div><div class="admin-sub">注文とメニューをリアルタイムに管理します</div></div>' +
-          '<a class="back-link" href="'+esc(customerBaseUrl())+'">👀 お客様画面を見る</a>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+            '<a class="back-link" href="'+esc(customerBaseUrl())+'">👀 お客様画面を見る</a>' +
+            '<button class="back-link" type="button" data-action="logout">🔒 ログアウト</button>' +
+          '</div>' +
         '</div>' +
         '<div class="admin-layout">' +
           '<div class="admin-nav">' +
             '<button class="'+(state.adminTab==='orders'?'active':'')+'" data-action="admin-tab" data-id="orders">📋 注文管理</button>' +
             '<button class="'+(state.adminTab==='menu'?'active':'')+'" data-action="admin-tab" data-id="menu">🍽 メニュー管理</button>' +
             '<button class="'+(state.adminTab==='qr'?'active':'')+'" data-action="admin-tab" data-id="qr">📱 テーブルQR</button>' +
+            '<button class="'+(state.adminTab==='settings'?'active':'')+'" data-action="admin-tab" data-id="settings">⚙️ 設定</button>' +
           '</div>' +
           '<div>' + body + '</div>' +
         '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderAdminSettings(){
+    return (
+      '<div class="settings-panel">' +
+        '<div class="qr-section-title">管理画面のパスワード変更</div>' +
+        '<p class="qr-intro">このデバイス（このブラウザ）でログインする際のパスワードを変更します。変更後は次回ログインからこの端末で新しいパスワードが必要です。別の端末やブラウザではまだ変更されないのでご注意ください。</p>' +
+        '<form id="change-password-form" class="edit-form" style="max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow-card);">' +
+          '<div class="full"><label>現在のパスワード</label><input type="password" id="current-password" autocomplete="current-password"></div>' +
+          '<div class="full"><label>新しいパスワード（4文字以上）</label><input type="password" id="new-password" autocomplete="new-password"></div>' +
+          '<div class="full"><label>新しいパスワード（確認）</label><input type="password" id="new-password-confirm" autocomplete="new-password"></div>' +
+          (state.settingsMsg ? '<div class="full login-error" style="color:'+(state.settingsMsgOk?"var(--success)":"var(--alert)")+';background:'+(state.settingsMsgOk?"var(--success-bg)":"var(--alert-bg)")+';">'+esc(state.settingsMsg)+'</div>' : '') +
+          '<div class="actions"><button type="submit" class="save">パスワードを変更</button></div>' +
+        '</form>' +
       '</div>'
     );
   }
@@ -619,19 +789,76 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
           regenerateTokens();
         }
         break;
+      case "logout":
+        clearSession();
+        state.authed = false;
+        state.loginError = null;
+        break;
       default: return;
     }
     render();
   }
 
+  function handleSubmit(e){
+    var form = e.target;
+
+    if(form.id === "login-form"){
+      e.preventDefault();
+      var pwInput = document.getElementById("login-password");
+      var pw = pwInput ? pwInput.value : "";
+      if(sha256Hex(pw) === state.adminPasswordHash){
+        state.authed = true;
+        state.loginError = null;
+        startSession();
+      } else {
+        state.loginError = "パスワードが違います。もう一度お試しください。";
+      }
+      render();
+      return;
+    }
+
+    if(form.id === "change-password-form"){
+      e.preventDefault();
+      var cur = document.getElementById("current-password").value;
+      var next = document.getElementById("new-password").value;
+      var confirmPw = document.getElementById("new-password-confirm").value;
+
+      if(!next || next.length < 4){
+        state.settingsMsg = "新しいパスワードは4文字以上で入力してください。";
+        state.settingsMsgOk = false;
+        render();
+        return;
+      }
+      if(next !== confirmPw){
+        state.settingsMsg = "新しいパスワード（確認）が一致しません。";
+        state.settingsMsgOk = false;
+        render();
+        return;
+      }
+      if(sha256Hex(cur) !== state.adminPasswordHash){
+        state.settingsMsg = "現在のパスワードが違います。";
+        state.settingsMsgOk = false;
+        render();
+        return;
+      }
+      var newHash = sha256Hex(next);
+      state.adminPasswordHash = newHash;
+      persistFields({adminPasswordHash: newHash});
+      state.settingsMsg = "パスワードを変更しました。次回ログインから新しいパスワードをお使いください。";
+      state.settingsMsgOk = true;
+      render();
+    }
+  }
+
   document.getElementById("page").addEventListener("click", handleClick);
+  document.getElementById("page").addEventListener("submit", handleSubmit);
 
   render();
 
   // Keep the orders board (and the count/revenue tiles) current as new
   // orders arrive from the separate customer page.
   setInterval(function(){
-    if(state.adminTab === "orders"){
+    if(state.authed && state.adminTab === "orders"){
       state.orders = readFreshOrders();
       render();
     }
