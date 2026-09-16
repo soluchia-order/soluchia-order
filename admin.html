@@ -216,6 +216,46 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 .settings-panel{max-width:520px;}
 
+.staff-order{max-width:640px;margin:0 auto;}
+.staff-table-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:420px;}
+.staff-table-btn{aspect-ratio:1;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-md);font-size:1.3rem;font-weight:700;cursor:pointer;color:var(--ink);}
+.staff-table-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.staff-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-4);flex-wrap:wrap;gap:8px;}
+.staff-table-chip{background:var(--surface-2);color:var(--surface-2-ink);border:none;border-radius:var(--r-pill);padding:8px 16px;font-size:.85rem;font-weight:700;cursor:pointer;}
+
+.staff-cat-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:var(--sp-3);scrollbar-width:none;}
+.staff-cat-row::-webkit-scrollbar{display:none;}
+.staff-cat-pill{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);padding:7px 15px;border-radius:var(--r-pill);font-size:.8rem;font-weight:600;cursor:pointer;}
+.staff-cat-pill.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+
+.staff-item-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center;}
+.staff-item-row:last-child{border-bottom:none;}
+.staff-item-row .em{font-size:1.4rem;flex:none;width:44px;height:44px;border-radius:var(--r-md);background:var(--bg);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);}
+.staff-item-row .info{flex:1;min-width:0;}
+.staff-item-row .nm{font-weight:700;font-size:.88rem;}
+.staff-item-row .pr{font-size:.78rem;color:var(--ink-soft);}
+.staff-stepper{display:flex;align-items:center;gap:8px;flex:none;}
+.staff-stepper button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:1rem;cursor:pointer;color:var(--ink);}
+.staff-add-btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:50%;width:34px;height:34px;font-size:1.15rem;cursor:pointer;flex:none;}
+.staff-sold{font-size:.68rem;font-weight:700;color:var(--alert);background:var(--alert-bg);padding:3px 9px;border-radius:var(--r-pill);flex:none;}
+
+.staff-cart-bar{
+  position:sticky;bottom:14px;background:var(--surface-2);color:var(--surface-2-ink);
+  border-radius:var(--r-lg);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;
+  box-shadow:var(--shadow-pop);cursor:pointer;border:none;width:100%;margin-top:var(--sp-4);
+}
+.staff-cart-bar .count{background:var(--accent);color:var(--accent-ink);border-radius:var(--r-pill);padding:2px 9px;font-size:.72rem;font-weight:700;margin-right:8px;}
+
+.staff-cart-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+.staff-cart-row:last-child{border-bottom:none;}
+.staff-note-field{width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:10px;font-size:.85rem;background:var(--surface);color:var(--ink);margin-top:8px;resize:vertical;min-height:56px;}
+
+.back-btn{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink);padding:4px;}
+.primary-btn{width:100%;background:var(--accent);color:var(--accent-ink);border:none;border-radius:var(--r-md);padding:14px;font-size:.95rem;font-weight:700;cursor:pointer;}
+.summary-line{display:flex;justify-content:space-between;font-size:.9rem;color:var(--ink-soft);padding:4px 0;}
+.qty-num{min-width:16px;text-align:center;font-weight:700;font-size:.85rem;}
+
 @media (max-width:760px){
   .admin-layout{grid-template-columns:1fr;}
   .admin-nav{flex-direction:row;position:static;overflow-x:auto;}
@@ -453,6 +493,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   state.loginError = null;
   state.settingsMsg = null;
   state.settingsMsgOk = false;
+  // Staff order entry ("スタッフ注文") is a session-only workflow — a server
+  // taps through the menu on their own phone to place an order for a table,
+  // like a POS calculator. It isn't persisted to shared storage; only the
+  // finished order (pushed into `orders` below) is.
+  state.staffOrder = { tableNumber: null, screen: "menu", activeCategory: CATEGORIES[0].id, cart: [], note: "" };
+  state.staffOrderConfirmMsg = null;
 
   function persistFields(fields){
     try{
@@ -530,6 +576,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     var body = state.adminTab === "menu" ? renderAdminMenu()
       : state.adminTab === "qr" ? renderAdminQR()
       : state.adminTab === "settings" ? renderAdminSettings()
+      : state.adminTab === "staff-order" ? renderAdminStaffOrder()
       : renderAdminOrders();
     return (
       '<div class="admin">' +
@@ -543,6 +590,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         '<div class="admin-layout">' +
           '<div class="admin-nav">' +
             '<button class="'+(state.adminTab==='orders'?'active':'')+'" data-action="admin-tab" data-id="orders">📋 注文管理</button>' +
+            '<button class="'+(state.adminTab==='staff-order'?'active':'')+'" data-action="admin-tab" data-id="staff-order">🧮 スタッフ注文</button>' +
             '<button class="'+(state.adminTab==='menu'?'active':'')+'" data-action="admin-tab" data-id="menu">🍽 メニュー管理</button>' +
             '<button class="'+(state.adminTab==='qr'?'active':'')+'" data-action="admin-tab" data-id="qr">📱 テーブルQR</button>' +
             '<button class="'+(state.adminTab==='settings'?'active':'')+'" data-action="admin-tab" data-id="settings">⚙️ 設定</button>' +
@@ -592,6 +640,170 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       '<div style="margin-top:var(--sp-5);background:var(--info-bg);border-radius:var(--r-md);padding:var(--sp-4);">' +
         '<div style="font-weight:700;font-size:.85rem;color:var(--info);margin-bottom:6px;">⚠️ 本番のQRコードを実際に無効化するには</div>' +
         '<p style="font-size:.78rem;color:var(--ink-soft);line-height:1.7;margin:0;">この端末（このブラウザ）では、上のボタンで作った新しいQRコードがすぐに有効になります。ただし印刷済みで店舗に置いてある古いQRコードは、公開しているサイトのコード自体を新しいトークンで更新・再公開するまでは無効になりません。準備ができたら「QRコードを入れ替えて」とお伝えいただければ、コードの更新と再公開まで対応します。</p>' +
+      '</div>'
+    );
+  }
+
+  // --- Staff order entry ("スタッフ注文") ---------------------------------
+  // A quick, calculator-style order form for staff: pick a table, tap
+  // through the menu to build a cart, confirm — and it lands in the same
+  // `orders` list (and the 注文管理 kanban) as a customer's own QR order.
+  function staffCartQty(itemId){
+    var c = state.staffOrder.cart.find(function(c){ return c.itemId===itemId; });
+    return c ? c.qty : 0;
+  }
+  function staffSetCartQty(itemId, qty){
+    var cart = state.staffOrder.cart;
+    var existing = cart.find(function(c){ return c.itemId===itemId; });
+    if(qty<=0){
+      state.staffOrder.cart = cart.filter(function(c){ return c.itemId!==itemId; });
+    } else if(existing){
+      existing.qty = qty;
+    } else {
+      cart.push({itemId:itemId, qty:qty});
+    }
+  }
+  function staffCartTotal(){
+    return state.staffOrder.cart.reduce(function(s,c){
+      var it = findItem(c.itemId);
+      return s + (it ? it.price*c.qty : 0);
+    }, 0);
+  }
+  function staffConfirmOrder(){
+    var so = state.staffOrder;
+    if(so.cart.length===0) return;
+    var fresh = readFreshOrders();
+    var items = so.cart.map(function(c){
+      var it = findItem(c.itemId);
+      return {name: it.name, price: it.price, qty: c.qty};
+    });
+    var newId = fresh.reduce(function(m,o){ return Math.max(m, o.id); }, 0) + 1;
+    var order = {
+      id: newId,
+      tableNumber: so.tableNumber,
+      items: items,
+      total: staffCartTotal(),
+      note: so.note,
+      status: "received",
+      createdAt: Date.now(),
+      source: "staff"
+    };
+    fresh.unshift(order);
+    state.orders = fresh;
+    persistFields({orders: fresh});
+    so.cart = [];
+    so.note = "";
+    so.screen = "menu";
+    state.staffOrderConfirmMsg = "注文 No." + newId + "（" + so.tableNumber + "番テーブル）を送信しました。";
+  }
+
+  function renderAdminStaffOrder(){
+    var so = state.staffOrder;
+    if(!so.tableNumber){ return renderStaffTableSelect(); }
+    return so.screen === "cart" ? renderStaffCart() : renderStaffMenu();
+  }
+
+  function renderStaffTableSelect(){
+    var buttons = state.tableTokens.slice().sort(function(a,b){ return a.number-b.number; }).map(function(t){
+      return '<button class="staff-table-btn" data-action="staff-pick-table" data-id="'+t.number+'">'+t.number+'</button>';
+    }).join('');
+    return (
+      '<div class="staff-order">' +
+        '<p class="qr-intro">注文するテーブル番号を選んでください。</p>' +
+        '<div class="staff-table-grid">'+buttons+'</div>' +
+      '</div>'
+    );
+  }
+
+  function renderStaffMenu(){
+    var so = state.staffOrder;
+    var confirmMsg = state.staffOrderConfirmMsg;
+    state.staffOrderConfirmMsg = null; // one-shot: shown for this render only
+    var cats = CATEGORIES.filter(function(c){ return state.menu.some(function(m){return m.category===c.id;}); });
+    var items = state.menu.filter(function(m){ return m.category===so.activeCategory; });
+    var rows = items.map(function(item){
+      var qty = staffCartQty(item.id);
+      var controls;
+      if(!item.available){
+        controls = '<span class="staff-sold">売り切れ</span>';
+      } else if(qty>0){
+        controls = '<div class="staff-stepper">' +
+          '<button data-action="staff-dec" data-id="'+item.id+'">−</button>' +
+          '<span class="qty-num tabular">'+qty+'</span>' +
+          '<button data-action="staff-inc" data-id="'+item.id+'">+</button>' +
+        '</div>';
+      } else {
+        controls = '<button class="staff-add-btn" data-action="staff-inc" data-id="'+item.id+'" aria-label="追加">+</button>';
+      }
+      return (
+        '<div class="staff-item-row">' +
+          '<div class="em">'+item.emoji+'</div>' +
+          '<div class="info"><div class="nm">'+esc(item.name)+'</div><div class="pr tabular">'+yen(item.price)+'</div></div>' +
+          controls +
+        '</div>'
+      );
+    }).join('');
+
+    var count = so.cart.reduce(function(s,c){ return s+c.qty; }, 0);
+
+    return (
+      '<div class="staff-order">' +
+        (confirmMsg ? '<div class="login-error" style="color:var(--success);background:var(--success-bg);margin-bottom:var(--sp-4);">'+esc(confirmMsg)+'</div>' : '') +
+        '<div class="staff-head">' +
+          '<button class="staff-table-chip" data-action="staff-change-table">🪑 '+so.tableNumber+'番テーブル（変更）</button>' +
+        '</div>' +
+        '<div class="staff-cat-row">' +
+          cats.map(function(c){ return '<button class="staff-cat-pill'+(c.id===so.activeCategory?' active':'')+'" data-action="staff-set-cat" data-id="'+c.id+'">'+esc(c.jp)+'</button>'; }).join('') +
+        '</div>' +
+        rows +
+        (count>0 ?
+          '<button class="staff-cart-bar" data-action="staff-open-cart"><span><span class="count tabular">'+count+'</span>点</span><span class="tabular">'+yen(staffCartTotal())+'　確認へ →</span></button>'
+          : '') +
+      '</div>'
+    );
+  }
+
+  function renderStaffCart(){
+    var so = state.staffOrder;
+    if(so.cart.length===0){
+      return (
+        '<div class="staff-order">' +
+          '<div class="staff-head"><button class="back-btn" data-action="staff-back-to-menu" aria-label="戻る">←</button><div class="qr-section-title" style="margin:0;">注文内容の確認</div></div>' +
+          '<p class="qr-intro">カートは空です。</p>' +
+        '</div>'
+      );
+    }
+    var rows = so.cart.map(function(c){
+      var it = findItem(c.itemId);
+      if(!it) return '';
+      return (
+        '<div class="staff-cart-row">' +
+          '<div class="em" style="width:40px;height:40px;font-size:1.2rem;flex:none;border-radius:var(--r-md);background:var(--bg);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);">'+it.emoji+'</div>' +
+          '<div class="info" style="flex:1;min-width:0;">' +
+            '<div class="nm" style="font-weight:700;font-size:.88rem;">'+esc(it.name)+'</div>' +
+            '<div class="pr tabular" style="font-size:.78rem;color:var(--ink-soft);">'+yen(it.price)+' × '+c.qty+' = '+yen(it.price*c.qty)+'</div>' +
+            '<div class="staff-stepper" style="margin-top:6px;">' +
+              '<button data-action="staff-dec" data-id="'+it.id+'">−</button>' +
+              '<span class="qty-num tabular">'+c.qty+'</span>' +
+              '<button data-action="staff-inc" data-id="'+it.id+'">+</button>' +
+            '</div>' +
+          '</div>' +
+          '<button class="icon-btn" data-action="staff-remove" data-id="'+it.id+'" aria-label="削除">🗑</button>' +
+        '</div>'
+      );
+    }).join('');
+
+    return (
+      '<div class="staff-order">' +
+        '<div class="staff-head">' +
+          '<button class="back-btn" data-action="staff-back-to-menu" aria-label="戻る">←</button>' +
+          '<button class="staff-table-chip" data-action="staff-change-table">🪑 '+so.tableNumber+'番テーブル（変更）</button>' +
+        '</div>' +
+        rows +
+        '<label style="display:block;margin-top:var(--sp-4);font-size:.78rem;color:var(--ink-soft);">備考（任意）</label>' +
+        '<textarea class="staff-note-field" data-action="staff-note" placeholder="例：取り分け皿を多めに">'+esc(so.note||'')+'</textarea>' +
+        '<div class="summary-line" style="margin-top:var(--sp-4);"><span>合計</span><span class="tabular">'+yen(staffCartTotal())+'</span></div>' +
+        '<button class="primary-btn" style="margin-top:var(--sp-3);" data-action="staff-confirm-order">この内容で注文を確定する</button>' +
       '</div>'
     );
   }
@@ -794,6 +1006,40 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         state.authed = false;
         state.loginError = null;
         break;
+      case "staff-pick-table":
+        state.staffOrder.tableNumber = parseInt(id, 10);
+        state.staffOrder.screen = "menu";
+        break;
+      case "staff-change-table":
+        state.staffOrder.tableNumber = null;
+        state.staffOrder.cart = [];
+        state.staffOrder.note = "";
+        state.staffOrder.screen = "menu";
+        break;
+      case "staff-set-cat":
+        state.staffOrder.activeCategory = id;
+        break;
+      case "staff-inc": {
+        var sit = findItem(id);
+        if(!sit || !sit.available) return;
+        staffSetCartQty(id, staffCartQty(id)+1);
+        break;
+      }
+      case "staff-dec":
+        staffSetCartQty(id, staffCartQty(id)-1);
+        break;
+      case "staff-remove":
+        staffSetCartQty(id, 0);
+        break;
+      case "staff-open-cart":
+        state.staffOrder.screen = "cart";
+        break;
+      case "staff-back-to-menu":
+        state.staffOrder.screen = "menu";
+        break;
+      case "staff-confirm-order":
+        staffConfirmOrder();
+        break;
       default: return;
     }
     render();
@@ -850,8 +1096,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     }
   }
 
+  function handleInput(e){
+    var el = e.target;
+    if(el.matches('[data-action="staff-note"]')){
+      state.staffOrder.note = el.value;
+    }
+  }
+
   document.getElementById("page").addEventListener("click", handleClick);
   document.getElementById("page").addEventListener("submit", handleSubmit);
+  document.getElementById("page").addEventListener("input", handleInput);
 
   render();
 
