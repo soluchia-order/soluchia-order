@@ -501,7 +501,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       editingId: null,
       tableTokens: JSON.parse(JSON.stringify(DEFAULT_TABLE_TOKENS)),
       tableTokensRotatedAt: null,
-      adminPasswordHash: DEFAULT_ADMIN_PASSWORD_HASH
+      adminPasswordHash: DEFAULT_ADMIN_PASSWORD_HASH,
+      // Google スプレッドシート連携（設定タブ）— 連携先のURL/シークレットと、
+      // どの注文までスプレッドシートに送信済みかを覚えておくフィンガープリント。
+      sheetSync: {url: "", secret: "", enabled: false},
+      sheetSyncFingerprints: {}
     };
     try{
       var raw = localStorage.getItem(STORAGE_KEY);
@@ -513,6 +517,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       if(Array.isArray(parsed.tableTokens) && parsed.tableTokens.length) fallback.tableTokens = parsed.tableTokens;
       if(parsed.tableTokensRotatedAt) fallback.tableTokensRotatedAt = parsed.tableTokensRotatedAt;
       if(typeof parsed.adminPasswordHash === "string" && parsed.adminPasswordHash) fallback.adminPasswordHash = parsed.adminPasswordHash;
+      if(parsed.sheetSync && typeof parsed.sheetSync === "object"){
+        fallback.sheetSync = {
+          url: typeof parsed.sheetSync.url === "string" ? parsed.sheetSync.url : "",
+          secret: typeof parsed.sheetSync.secret === "string" ? parsed.sheetSync.secret : "",
+          enabled: !!parsed.sheetSync.enabled
+        };
+      }
+      if(parsed.sheetSyncFingerprints && typeof parsed.sheetSyncFingerprints === "object"){
+        fallback.sheetSyncFingerprints = parsed.sheetSyncFingerprints;
+      }
       return fallback;
     }catch(e){
       return fallback;
@@ -535,6 +549,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   // the edit is saved.
   state.editOrderId = null;
   state.editOrderDraft = null;
+  // Googleスプレッドシート連携の実行時ステータス（画面表示のみ・保存はしない）。
+  state.sheetSyncStatus = null; // null | "syncing" | "ok" | "error"
+  state.sheetSyncLastMsg = null;
+  state.sheetSyncLastAt = null;
 
   function persistFields(fields){
     try{
@@ -639,6 +657,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
   function renderAdminSettings(){
     var liveCount = state.orders.length;
+    var sync = state.sheetSync || {url:"", secret:"", enabled:false};
+    var statusLine = "";
+    if(state.sheetSyncStatus === "syncing"){
+      statusLine = '<div class="full" style="font-size:.78rem;color:var(--info);">送信中…</div>';
+    } else if(state.sheetSyncStatus === "ok" || (state.sheetSyncLastMsg && state.sheetSyncStatus !== "error")){
+      statusLine = '<div class="full" style="font-size:.78rem;color:var(--success);">✓ '+esc(state.sheetSyncLastMsg||"")+(state.sheetSyncLastAt?'（'+new Date(state.sheetSyncLastAt).toLocaleString("ja-JP")+'）':'')+'</div>';
+    } else if(state.sheetSyncStatus === "error"){
+      statusLine = '<div class="full" style="font-size:.78rem;color:var(--alert);">⚠ '+esc(state.sheetSyncLastMsg||"")+'</div>';
+    }
     return (
       '<div class="settings-panel">' +
         '<div class="qr-section-title">管理画面のパスワード変更</div>' +
@@ -650,9 +677,27 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
           (state.settingsMsg ? '<div class="full login-error" style="color:'+(state.settingsMsgOk?"var(--success)":"var(--alert)")+';background:'+(state.settingsMsgOk?"var(--success-bg)":"var(--alert-bg)")+';">'+esc(state.settingsMsg)+'</div>' : '') +
           '<div class="actions"><button type="submit" class="save">パスワードを変更</button></div>' +
         '</form>' +
+
+        '<div class="qr-section-title" style="margin-top:var(--sp-6);">🔗 Googleスプレッドシート連携</div>' +
+        '<p class="qr-intro">注文データを、ご自身が用意したGoogleスプレッドシートへ自動送信できます。連携するGoogleアカウントは、下のURLを発行する（Apps Scriptをウェブアプリとしてデプロイする）際に使うアカウントで自由に選べます。別のアカウントに切り替えたい場合は、そのアカウントで同じスクリプトをデプロイし直して、発行された新しいURLをここに貼り替えるだけです。セットアップ用のスクリプトと手順書は別途お渡ししています。</p>' +
+        '<form id="sheet-sync-form" class="edit-form" style="max-width:520px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow-card);">' +
+          '<div class="full" style="display:flex;align-items:center;gap:8px;">' +
+            '<input type="checkbox" id="sheet-sync-enabled" style="width:auto;" '+(sync.enabled?'checked':'')+'>' +
+            '<label style="margin:0;" for="sheet-sync-enabled">連携を有効にする（新しい注文・変更を自動送信）</label>' +
+          '</div>' +
+          '<div class="full"><label>Google Apps Script ウェブアプリのURL</label><input type="text" id="sheet-sync-url" placeholder="https://script.google.com/macros/s/.../exec" value="'+esc(sync.url)+'"></div>' +
+          '<div class="full"><label>共有シークレット（任意・スクリプト側と同じ文字列にしてください）</label><input type="text" id="sheet-sync-secret" value="'+esc(sync.secret)+'"></div>' +
+          statusLine +
+          '<div class="actions" style="flex-wrap:wrap;">' +
+            '<button type="submit" class="save">連携設定を保存</button>' +
+            '<button type="button" data-action="sheet-sync-test">テスト送信</button>' +
+            '<button type="button" data-action="sheet-sync-now">今すぐ全件同期</button>' +
+          '</div>' +
+        '</form>' +
+
         '<div class="danger-zone">' +
           '<h3>⚠️ 注文データのリセット</h3>' +
-          '<p>現在 '+liveCount+' 件の注文（取り消し済みを含む）が保存されています。テスト注文を試したあとのリセットや、営業開始前の初期化にご利用ください。累計売上・注文管理ボードの内容もすべて0件に戻ります。メニュー、テーブルQR、パスワードは削除されません。この操作は元に戻せません。</p>' +
+          '<p>現在 '+liveCount+' 件の注文（取り消し済みを含む）が保存されています。テスト注文を試したあとのリセットや、営業開始前の初期化にご利用ください。累計売上・注文管理ボードの内容もすべて0件に戻ります。メニュー、テーブルQR、パスワードは削除されません。スプレッドシートに既に送信済みの行はこの操作では削除されません（スプレッドシート側で直接削除してください）。この操作は元に戻せません。</p>' +
           '<button type="button" class="mini-btn" data-action="reset-all-orders">すべての注文データを削除する</button>' +
         '</div>' +
       '</div>'
@@ -733,6 +778,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     fresh.unshift(order);
     state.orders = fresh;
     persistFields({orders: fresh});
+    maybeSyncOrdersToSheet(fresh);
     so.cart = [];
     so.note = "";
     so.screen = "menu";
@@ -1048,6 +1094,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     if(idx < STATUS_ORDER.length-1){ order.status = STATUS_ORDER[idx+1]; }
     state.orders = fresh;
     persistFields({orders: fresh});
+    maybeSyncOrdersToSheet(fresh);
   }
 
   // --- Order cancel / restore / edit (注文管理 board) --------------------
@@ -1060,6 +1107,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     order.canceledAt = Date.now();
     state.orders = fresh;
     persistFields({orders: fresh});
+    maybeSyncOrdersToSheet(fresh);
   }
 
   function restoreOrder(id){
@@ -1070,6 +1118,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     delete order.canceledAt;
     state.orders = fresh;
     persistFields({orders: fresh});
+    maybeSyncOrdersToSheet(fresh);
   }
 
   function startEditOrder(id){
@@ -1121,6 +1170,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     order.editedAt = Date.now();
     state.orders = fresh;
     persistFields({orders: fresh});
+    maybeSyncOrdersToSheet(fresh);
     state.editOrderId = null;
     state.editOrderDraft = null;
   }
@@ -1130,7 +1180,111 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     state.orders = [];
     state.editOrderId = null;
     state.editOrderDraft = null;
-    persistFields({orders: []});
+    state.sheetSyncFingerprints = {};
+    persistFields({orders: [], sheetSyncFingerprints: {}});
+  }
+
+  // --- Googleスプレッドシート連携 -----------------------------------------
+  // このページ自体はバックエンドを持たないため、ユーザー自身が用意した
+  // Google Apps Script のウェブアプリ（別途配布する Code.gs）を送信先として
+  // 使う。どのGoogleアカウントと連携するかは、そのウェブアプリをデプロイす
+  // る際にユーザーが選ぶアカウントで決まる——このURLを設定タブに貼り替える
+  // だけで、いつでも連携先のアカウント／スプレッドシートを切り替えられる。
+  function computeOrderFingerprint(o){
+    var itemsSig = (o.items||[]).map(function(i){ return i.name+":"+i.qty+":"+i.price; }).join(",");
+    return [o.status, o.total, o.note||"", o.editedAt||"", o.canceledAt||"", itemsSig].join("|");
+  }
+
+  function sheetSyncPending(orders){
+    var cfg = state.sheetSync;
+    if(!cfg || !cfg.enabled || !cfg.url) return [];
+    var fp = state.sheetSyncFingerprints || {};
+    return orders.filter(function(o){ return fp[o.id] !== computeOrderFingerprint(o); });
+  }
+
+  function pushOrdersToSheet(orders, opts){
+    var cfg = state.sheetSync;
+    opts = opts || {};
+    if(!cfg || !cfg.url) return;
+    if(!orders.length && !opts.test) return;
+
+    state.sheetSyncStatus = "syncing";
+    state.sheetSyncLastMsg = null;
+    render();
+
+    var payload = {
+      secret: cfg.secret || "",
+      test: !!opts.test,
+      orders: orders.map(function(o){
+        return {
+          id: o.id,
+          tableNumber: o.tableNumber,
+          status: o.status,
+          statusLabel: (STATUS[o.status] && STATUS[o.status].label) || o.status,
+          items: o.items,
+          note: o.note || "",
+          total: o.total,
+          createdAt: o.createdAt,
+          editedAt: o.editedAt || null,
+          canceledAt: o.canceledAt || null,
+          source: o.source || "customer"
+        };
+      })
+    };
+
+    fetch(cfg.url, {
+      method: "POST",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
+      body: JSON.stringify(payload)
+    }).then(function(res){ return res.text(); })
+      .then(function(text){
+        var ok = true, serverMsg = "";
+        try{
+          var parsed = JSON.parse(text);
+          if(parsed && parsed.ok === false){ ok = false; serverMsg = parsed.error || ""; }
+        }catch(e){ /* 非JSON応答はそのまま成功扱い（応答が返っていればOK） */ }
+        if(!ok) throw new Error(serverMsg || "sheet responded with an error");
+
+        if(!opts.test){
+          var fp = state.sheetSyncFingerprints || {};
+          orders.forEach(function(o){ fp[o.id] = computeOrderFingerprint(o); });
+          state.sheetSyncFingerprints = fp;
+          persistFields({sheetSyncFingerprints: fp});
+        }
+        state.sheetSyncStatus = "ok";
+        state.sheetSyncLastAt = Date.now();
+        state.sheetSyncLastMsg = opts.test
+          ? "テスト送信に成功しました。スプレッドシートをご確認ください。"
+          : (orders.length + "件の注文をスプレッドシートに送信しました。");
+        render();
+      })
+      .catch(function(){
+        state.sheetSyncStatus = "error";
+        state.sheetSyncLastMsg = "送信に失敗しました。URL・シークレット・公開設定（アクセスできるユーザー：全員）をご確認ください。";
+        render();
+      });
+  }
+
+  // 注文の追加・状態変更・編集のたびに呼ぶ。連携が無効、またはURL未設定なら
+  // 何もしない。差分（フィンガープリント）のある注文だけをまとめて送る。
+  function maybeSyncOrdersToSheet(orders){
+    var cfg = state.sheetSync;
+    if(!cfg || !cfg.enabled || !cfg.url) return;
+    var pending = sheetSyncPending(orders);
+    if(pending.length) pushOrdersToSheet(pending, {});
+  }
+
+  function saveSheetSyncSettings(){
+    var url = document.getElementById("sheet-sync-url").value.trim();
+    var secret = document.getElementById("sheet-sync-secret").value;
+    var enabled = document.getElementById("sheet-sync-enabled").checked;
+    state.sheetSync = {url: url, secret: secret, enabled: enabled};
+    persistFields({sheetSync: state.sheetSync});
+    state.sheetSyncStatus = null;
+    state.sheetSyncLastMsg = "連携設定を保存しました。";
+    if(enabled && url){
+      maybeSyncOrdersToSheet(state.orders);
+    }
   }
 
   function saveEdit(id, form){
@@ -1189,6 +1343,26 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         break;
       }
       case "reset-all-orders": resetAllOrders(); break;
+      case "sheet-sync-test": {
+        var testCfg = state.sheetSync;
+        if(!testCfg || !testCfg.url){
+          state.sheetSyncStatus = "error";
+          state.sheetSyncLastMsg = "先にウェブアプリのURLを入力して保存してください。";
+          break;
+        }
+        pushOrdersToSheet([], {test:true});
+        break;
+      }
+      case "sheet-sync-now": {
+        var nowCfg = state.sheetSync;
+        if(!nowCfg || !nowCfg.url){
+          state.sheetSyncStatus = "error";
+          state.sheetSyncLastMsg = "先にウェブアプリのURLを入力して保存してください。";
+          break;
+        }
+        pushOrdersToSheet(state.orders, {});
+        break;
+      }
       case "toggle-avail": {
         var it = findItem(id);
         if(it) it.available = !it.available;
@@ -1298,6 +1472,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       state.settingsMsg = "パスワードを変更しました。次回ログインから新しいパスワードをお使いください。";
       state.settingsMsgOk = true;
       render();
+      return;
+    }
+
+    if(form.id === "sheet-sync-form"){
+      e.preventDefault();
+      saveSheetSyncSettings();
+      render();
     }
   }
 
@@ -1320,9 +1501,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   // Keep the orders board (and the count/revenue tiles) current as new
   // orders arrive from the separate customer page.
   setInterval(function(){
-    if(state.authed && state.adminTab === "orders" && !state.editOrderId){
+    if(state.authed && !state.editOrderId){
       state.orders = readFreshOrders();
-      render();
+      maybeSyncOrdersToSheet(state.orders);
+      if(state.adminTab === "orders"){ render(); }
     }
   }, 3000);
 })();
