@@ -114,6 +114,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .back-link:hover{border-color:var(--accent);color:var(--accent);}
 
 .admin-layout{display:grid;grid-template-columns:200px 1fr;gap:var(--sp-5);align-items:start;}
+.admin-layout > *{min-width:0;}
 .admin-nav{display:flex;flex-direction:column;gap:4px;background:var(--surface);border:1px solid var(--line);
   border-radius:var(--r-md);padding:8px;position:sticky;top:var(--sp-4);}
 .admin-nav button{
@@ -128,8 +129,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .stat-tile .num{font-size:1.55rem;font-weight:700;font-family:"Kiwi Maru",serif;}
 .stat-tile .lbl{font-size:.72rem;color:var(--ink-soft);letter-spacing:.04em;margin-top:2px;}
 
-.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4);align-items:start;}
-.kan-col{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-3);min-height:160px;}
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-4);align-items:start;}
+.kan-col{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-3);min-height:160px;min-width:0;}
 .kan-col-head{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 12px;}
 .kan-col-head .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px;}
 .kan-col-head span.title{font-weight:700;font-size:.85rem;}
@@ -146,6 +147,21 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   padding:8px;font-size:.76rem;font-weight:700;cursor:pointer;
 }
 .mini-btn.done{background:var(--success);}
+.mini-btn-outline{
+  flex:1;background:none;border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:8px;font-size:.72rem;font-weight:700;cursor:pointer;color:var(--ink-soft);
+}
+.mini-btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.mini-btn-outline.danger{color:var(--alert);border-color:var(--alert-bg);}
+.mini-btn-outline.danger:hover{border-color:var(--alert);}
+.order-card.canceled{opacity:.58;}
+.order-card-actions{display:flex;gap:6px;margin-top:8px;}
+.order-card-actions .mini-btn,.order-card-actions .mini-btn-outline{flex:1;width:auto;min-width:0;}
+.order-edit-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);align-items:center;}
+.order-edit-row:last-child{border-bottom:none;}
+.order-edit-row .nm{flex:1;font-size:.8rem;font-weight:600;min-width:0;}
+.order-add-item-row{display:flex;gap:8px;margin-top:10px;}
+.order-add-item-row select{flex:1;min-width:0;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px;font-size:.78rem;background:var(--surface);color:var(--ink);}
 .kan-empty{color:var(--ink-soft);font-size:.76rem;text-align:center;padding:var(--sp-4) 0;}
 
 .menu-admin-cat{margin-bottom:var(--sp-5);}
@@ -215,6 +231,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .login-error{font-size:.78rem;color:var(--alert);background:var(--alert-bg);border-radius:var(--r-sm);padding:8px 10px;}
 
 .settings-panel{max-width:520px;}
+.danger-zone{margin-top:var(--sp-6);background:var(--alert-bg);border-radius:var(--r-md);padding:var(--sp-4);max-width:420px;}
+.danger-zone h3{font-size:.95rem;margin-bottom:6px;color:var(--alert);}
+.danger-zone p{font-size:.78rem;color:var(--ink-soft);line-height:1.6;margin-bottom:10px;}
+.danger-zone .mini-btn{background:var(--alert);}
 
 .staff-order{max-width:640px;margin:0 auto;}
 .staff-table-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:420px;}
@@ -259,6 +279,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media (max-width:760px){
   .admin-layout{grid-template-columns:1fr;}
   .admin-nav{flex-direction:row;position:static;overflow-x:auto;}
+  .admin-nav button{
+    flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;
+    text-align:center;white-space:normal;word-break:keep-all;overflow-wrap:normal;
+    line-height:1.3;min-height:52px;padding:8px 6px;
+  }
   .kanban{grid-template-columns:1fr;}
   .menu-row{grid-template-columns:36px 1fr 70px;grid-template-areas:"em info pr" "em tog act";row-gap:8px;}
   .menu-row .avail-toggle{justify-self:start;}
@@ -460,8 +485,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   var STATUS = {
     received:{label:"受付済み", cls:"st-received", dot:"var(--info)"},
     cooking:{label:"調理中", cls:"st-cooking", dot:"var(--accent)"},
-    done:{label:"提供完了", cls:"st-done", dot:"var(--success)"}
+    done:{label:"提供完了", cls:"st-done", dot:"var(--success)"},
+    canceled:{label:"取り消し", cls:"st-canceled", dot:"var(--alert)"}
   };
+  // Only the first three make up the working kanban flow — a canceled order
+  // is shown in its own column instead of taking a slot in that flow, and is
+  // excluded from every revenue/count stat.
   var STATUS_ORDER = ["received","cooking","done"];
 
   function loadState(){
@@ -501,6 +530,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   // finished order (pushed into `orders` below) is.
   state.staffOrder = { tableNumber: null, screen: "menu", activeCategory: CATEGORIES[0].id, cart: [], note: "" };
   state.staffOrderConfirmMsg = null;
+  // Order editing ("編集") on the 注文管理 board — a session-only working
+  // copy of one order's items/note, mirrored back into `orders` only when
+  // the edit is saved.
+  state.editOrderId = null;
+  state.editOrderDraft = null;
 
   function persistFields(fields){
     try{
@@ -591,10 +625,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         '</div>' +
         '<div class="admin-layout">' +
           '<div class="admin-nav">' +
-            '<button class="'+(state.adminTab==='orders'?'active':'')+'" data-action="admin-tab" data-id="orders">📋 注文管理</button>' +
-            '<button class="'+(state.adminTab==='staff-order'?'active':'')+'" data-action="admin-tab" data-id="staff-order">🧮 スタッフ注文</button>' +
-            '<button class="'+(state.adminTab==='menu'?'active':'')+'" data-action="admin-tab" data-id="menu">🍽 メニュー管理</button>' +
-            '<button class="'+(state.adminTab==='qr'?'active':'')+'" data-action="admin-tab" data-id="qr">📱 テーブルQR</button>' +
+            '<button class="'+(state.adminTab==='orders'?'active':'')+'" data-action="admin-tab" data-id="orders">📋 注文<wbr>管理</button>' +
+            '<button class="'+(state.adminTab==='staff-order'?'active':'')+'" data-action="admin-tab" data-id="staff-order">🧮 スタッフ<wbr>注文</button>' +
+            '<button class="'+(state.adminTab==='menu'?'active':'')+'" data-action="admin-tab" data-id="menu">🍽 メニュー<wbr>管理</button>' +
+            '<button class="'+(state.adminTab==='qr'?'active':'')+'" data-action="admin-tab" data-id="qr">📱 テーブル<wbr>QR</button>' +
             '<button class="'+(state.adminTab==='settings'?'active':'')+'" data-action="admin-tab" data-id="settings">⚙️ 設定</button>' +
           '</div>' +
           '<div>' + body + '</div>' +
@@ -604,6 +638,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
 
   function renderAdminSettings(){
+    var liveCount = state.orders.length;
     return (
       '<div class="settings-panel">' +
         '<div class="qr-section-title">管理画面のパスワード変更</div>' +
@@ -615,6 +650,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
           (state.settingsMsg ? '<div class="full login-error" style="color:'+(state.settingsMsgOk?"var(--success)":"var(--alert)")+';background:'+(state.settingsMsgOk?"var(--success-bg)":"var(--alert-bg)")+';">'+esc(state.settingsMsg)+'</div>' : '') +
           '<div class="actions"><button type="submit" class="save">パスワードを変更</button></div>' +
         '</form>' +
+        '<div class="danger-zone">' +
+          '<h3>⚠️ 注文データのリセット</h3>' +
+          '<p>現在 '+liveCount+' 件の注文（取り消し済みを含む）が保存されています。テスト注文を試したあとのリセットや、営業開始前の初期化にご利用ください。累計売上・注文管理ボードの内容もすべて0件に戻ります。メニュー、テーブルQR、パスワードは削除されません。この操作は元に戻せません。</p>' +
+          '<button type="button" class="mini-btn" data-action="reset-all-orders">すべての注文データを削除する</button>' +
+        '</div>' +
       '</div>'
     );
   }
@@ -811,33 +851,43 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
 
   function renderAdminOrders(){
-    var today = state.orders;
-    var revenue = today.reduce(function(s,o){ return s+o.total; },0);
-    var active = today.filter(function(o){ return o.status!=='done'; }).length;
+    var all = state.orders;
+    var visible = all.filter(function(o){ return o.status!=='canceled'; });
+    var canceled = all.filter(function(o){ return o.status==='canceled'; });
+    var revenuePending = visible.reduce(function(s,o){ return s+o.total; },0);
+    var revenueDone = all.filter(function(o){ return o.status==='done'; }).reduce(function(s,o){ return s+o.total; },0);
+    var active = visible.filter(function(o){ return o.status!=='done'; }).length;
 
     var stat = '<div class="stat-row">' +
-      '<div class="stat-tile"><div class="num tabular">'+today.length+'</div><div class="lbl">本日の注文件数</div></div>' +
+      '<div class="stat-tile"><div class="num tabular">'+visible.length+'</div><div class="lbl">注文件数（有効）</div></div>' +
       '<div class="stat-tile"><div class="num tabular">'+active+'</div><div class="lbl">対応中の注文</div></div>' +
-      '<div class="stat-tile"><div class="num tabular">'+yen(revenue)+'</div><div class="lbl">本日の売上（見込み）</div></div>' +
+      '<div class="stat-tile"><div class="num tabular">'+yen(revenuePending)+'</div><div class="lbl">売上（見込み合計）</div></div>' +
+      '<div class="stat-tile"><div class="num tabular">'+yen(revenueDone)+'</div><div class="lbl">累計売上（提供完了分）</div></div>' +
     '</div>';
+
+    function renderOrderCard(o){
+      if(state.editOrderId === o.id){ return renderOrderEditForm(o); }
+      var itemsTxt = o.items.map(function(i){ return esc(i.name)+' ×'+i.qty; }).join('　');
+      var nextLabel = o.status==='received' ? '調理を開始する' : (o.status==='cooking' ? '提供完了にする' : '');
+      var btn = nextLabel ? '<button class="mini-btn'+(o.status==='cooking'?' done':'')+'" data-action="advance-order" data-id="'+o.id+'">'+nextLabel+'</button>' : '';
+      var actions = o.status==='canceled'
+        ? '<div class="order-card-actions"><button class="mini-btn-outline" data-action="restore-order" data-id="'+o.id+'">↩ 受付に戻す</button></div>'
+        : '<div class="order-card-actions"><button class="mini-btn-outline" data-action="edit-order" data-id="'+o.id+'">✎ 編集</button><button class="mini-btn-outline danger" data-action="cancel-order" data-id="'+o.id+'">✕ 取り消し</button></div>';
+      return (
+        '<div class="order-card'+(o.status==='canceled'?' canceled':'')+'">' +
+          '<div class="order-card-top"><span>No.'+o.id+' ・ '+esc(o.tableNumber)+'番テーブル</span><span class="order-card-time">'+timeAgo(o.createdAt)+'</span></div>' +
+          '<div class="order-items-list">'+itemsTxt+'</div>' +
+          (o.note ? '<div class="order-note">備考：'+esc(o.note)+'</div>' : '') +
+          '<div class="order-total tabular">'+yen(o.total)+'</div>' +
+          btn + actions +
+        '</div>'
+      );
+    }
 
     var cols = STATUS_ORDER.map(function(key){
       var st = STATUS[key];
-      var orders = today.filter(function(o){ return o.status===key; }).sort(function(a,b){return a.createdAt-b.createdAt;});
-      var cards = orders.map(function(o){
-        var itemsTxt = o.items.map(function(i){ return esc(i.name)+' ×'+i.qty; }).join('　');
-        var nextLabel = key==='received' ? '調理を開始する' : (key==='cooking' ? '提供完了にする' : '');
-        var btn = nextLabel ? '<button class="mini-btn'+(key==='cooking'?' done':'')+'" data-action="advance-order" data-id="'+o.id+'">'+nextLabel+'</button>' : '';
-        return (
-          '<div class="order-card">' +
-            '<div class="order-card-top"><span>No.'+o.id+' ・ '+esc(o.tableNumber)+'番テーブル</span><span class="order-card-time">'+timeAgo(o.createdAt)+'</span></div>' +
-            '<div class="order-items-list">'+itemsTxt+'</div>' +
-            (o.note ? '<div class="order-note">備考：'+esc(o.note)+'</div>' : '') +
-            '<div class="order-total tabular">'+yen(o.total)+'</div>' +
-            btn +
-          '</div>'
-        );
-      }).join('');
+      var orders = visible.filter(function(o){ return o.status===key; }).sort(function(a,b){return a.createdAt-b.createdAt;});
+      var cards = orders.map(renderOrderCard).join('');
       return (
         '<div class="kan-col">' +
           '<div class="kan-col-head"><span class="title"><span class="dot" style="background:'+st.dot+'"></span>'+st.label+'</span><span class="kan-count">'+orders.length+'</span></div>' +
@@ -846,7 +896,53 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       );
     }).join('');
 
-    return stat + '<div class="kanban">' + cols + '</div>';
+    var canceledSorted = canceled.slice().sort(function(a,b){ return b.createdAt-a.createdAt; });
+    var canceledCol = (
+      '<div class="kan-col">' +
+        '<div class="kan-col-head"><span class="title"><span class="dot" style="background:'+STATUS.canceled.dot+'"></span>'+STATUS.canceled.label+'</span><span class="kan-count">'+canceledSorted.length+'</span></div>' +
+        (canceledSorted.map(renderOrderCard).join('') || '<div class="kan-empty">取り消された注文はありません</div>') +
+      '</div>'
+    );
+
+    return stat + '<div class="kanban">' + cols + canceledCol + '</div>';
+  }
+
+  function renderOrderEditForm(o){
+    var draft = state.editOrderDraft;
+    var rows = draft.items.map(function(it, idx){
+      return (
+        '<div class="order-edit-row">' +
+          '<div class="nm">'+esc(it.name)+' <span class="tabular" style="color:var(--ink-soft);font-weight:400;">'+yen(it.price)+'</span></div>' +
+          '<div class="staff-stepper">' +
+            '<button type="button" data-action="order-item-dec" data-id="'+idx+'">−</button>' +
+            '<span class="qty-num tabular">'+it.qty+'</span>' +
+            '<button type="button" data-action="order-item-inc" data-id="'+idx+'">+</button>' +
+          '</div>' +
+          '<button type="button" class="icon-btn" data-action="order-item-remove" data-id="'+idx+'" aria-label="削除">🗑</button>' +
+        '</div>'
+      );
+    }).join('');
+    var total = draft.items.reduce(function(s,it){ return s + it.price*it.qty; }, 0);
+    var menuOptions = state.menu.filter(function(m){ return m.available; }).map(function(m){
+      return '<option value="'+esc(m.id)+'">'+esc(m.name)+'（'+yen(m.price)+'）</option>';
+    }).join('');
+    return (
+      '<div class="order-card">' +
+        '<div class="order-card-top"><span>No.'+o.id+' ・ '+esc(o.tableNumber)+'番テーブル を編集中</span></div>' +
+        (rows || '<div class="kan-empty">商品がありません</div>') +
+        '<div class="order-add-item-row">' +
+          '<select data-field="order-add-item-select">'+menuOptions+'</select>' +
+          '<button type="button" class="mini-btn" style="width:auto;padding:8px 14px;" data-action="order-add-item">追加</button>' +
+        '</div>' +
+        '<label style="display:block;margin-top:10px;font-size:.72rem;color:var(--ink-soft);">備考</label>' +
+        '<textarea class="staff-note-field" data-action="order-edit-note">'+esc(draft.note||'')+'</textarea>' +
+        '<div class="summary-line" style="margin-top:8px;"><span>合計</span><span class="tabular">'+yen(total)+'</span></div>' +
+        '<div class="order-card-actions" style="margin-top:8px;">' +
+          '<button class="mini-btn" data-action="save-order-edit" data-id="'+o.id+'">保存する</button>' +
+          '<button class="mini-btn-outline" data-action="cancel-order-edit">キャンセル</button>' +
+        '</div>' +
+      '</div>'
+    );
   }
 
   function timeAgo(ts){
@@ -954,6 +1050,89 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     persistFields({orders: fresh});
   }
 
+  // --- Order cancel / restore / edit (注文管理 board) --------------------
+  function cancelOrder(id){
+    if(!window.confirm("この注文を取り消しますか？売上の集計から除外されます。")) return;
+    var fresh = readFreshOrders();
+    var order = fresh.find(function(o){ return String(o.id)===String(id); });
+    if(!order) return;
+    order.status = "canceled";
+    order.canceledAt = Date.now();
+    state.orders = fresh;
+    persistFields({orders: fresh});
+  }
+
+  function restoreOrder(id){
+    var fresh = readFreshOrders();
+    var order = fresh.find(function(o){ return String(o.id)===String(id); });
+    if(!order) return;
+    order.status = "received";
+    delete order.canceledAt;
+    state.orders = fresh;
+    persistFields({orders: fresh});
+  }
+
+  function startEditOrder(id){
+    var fresh = readFreshOrders();
+    var order = fresh.find(function(o){ return String(o.id)===String(id); });
+    if(!order) return;
+    state.orders = fresh;
+    state.editOrderId = order.id;
+    state.editOrderDraft = {
+      items: order.items.map(function(i){ return {name:i.name, price:i.price, qty:i.qty}; }),
+      note: order.note || ""
+    };
+  }
+
+  function cancelEditOrder(){
+    state.editOrderId = null;
+    state.editOrderDraft = null;
+  }
+
+  function orderDraftSetQty(idx, qty){
+    var draft = state.editOrderDraft;
+    if(!draft || !draft.items[idx]) return;
+    if(qty<=0){ draft.items.splice(idx,1); }
+    else { draft.items[idx].qty = qty; }
+  }
+
+  function orderDraftAddItem(itemId){
+    var draft = state.editOrderDraft;
+    if(!draft) return;
+    var menuItem = findItem(itemId);
+    if(!menuItem) return;
+    var existing = draft.items.find(function(i){ return i.name===menuItem.name; });
+    if(existing){ existing.qty += 1; }
+    else { draft.items.push({name:menuItem.name, price:menuItem.price, qty:1}); }
+  }
+
+  function saveOrderEdit(id){
+    var draft = state.editOrderDraft;
+    if(!draft) return;
+    var fresh = readFreshOrders();
+    var order = fresh.find(function(o){ return String(o.id)===String(id); });
+    if(!order) return;
+    var items = draft.items.filter(function(i){ return i.qty>0; }).map(function(i){
+      return {name:i.name, price:i.price, qty:i.qty};
+    });
+    order.items = items;
+    order.total = items.reduce(function(s,i){ return s+i.price*i.qty; }, 0);
+    order.note = draft.note;
+    order.editedAt = Date.now();
+    state.orders = fresh;
+    persistFields({orders: fresh});
+    state.editOrderId = null;
+    state.editOrderDraft = null;
+  }
+
+  function resetAllOrders(){
+    if(!window.confirm("すべての注文データを削除します。テスト注文の削除や、営業開始前のリセットにご利用ください。この操作は元に戻せません。本当に削除しますか？")) return;
+    state.orders = [];
+    state.editOrderId = null;
+    state.editOrderDraft = null;
+    persistFields({orders: []});
+  }
+
   function saveEdit(id, form){
     var item = findItem(id);
     if(!item || !form) return;
@@ -986,6 +1165,30 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     switch(action){
       case "admin-tab": state.adminTab=id; break;
       case "advance-order": advanceOrder(id); break;
+      case "cancel-order": cancelOrder(id); break;
+      case "restore-order": restoreOrder(id); break;
+      case "edit-order": startEditOrder(id); break;
+      case "cancel-order-edit": cancelEditOrder(); break;
+      case "save-order-edit": saveOrderEdit(id); break;
+      case "order-item-inc": {
+        var incIdx = parseInt(id,10);
+        var incRow = state.editOrderDraft && state.editOrderDraft.items[incIdx];
+        if(incRow) orderDraftSetQty(incIdx, incRow.qty+1);
+        break;
+      }
+      case "order-item-dec": {
+        var decIdx = parseInt(id,10);
+        var decRow = state.editOrderDraft && state.editOrderDraft.items[decIdx];
+        if(decRow) orderDraftSetQty(decIdx, decRow.qty-1);
+        break;
+      }
+      case "order-item-remove": orderDraftSetQty(parseInt(id,10), 0); break;
+      case "order-add-item": {
+        var addSel = el.closest(".order-card").querySelector('[data-field="order-add-item-select"]');
+        if(addSel && addSel.value) orderDraftAddItem(addSel.value);
+        break;
+      }
+      case "reset-all-orders": resetAllOrders(); break;
       case "toggle-avail": {
         var it = findItem(id);
         if(it) it.available = !it.available;
@@ -1103,6 +1306,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     if(el.matches('[data-action="staff-note"]')){
       state.staffOrder.note = el.value;
     }
+    if(el.matches('[data-action="order-edit-note"]') && state.editOrderDraft){
+      state.editOrderDraft.note = el.value;
+    }
   }
 
   document.getElementById("page").addEventListener("click", handleClick);
@@ -1114,7 +1320,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   // Keep the orders board (and the count/revenue tiles) current as new
   // orders arrive from the separate customer page.
   setInterval(function(){
-    if(state.authed && state.adminTab === "orders"){
+    if(state.authed && state.adminTab === "orders" && !state.editOrderId){
       state.orders = readFreshOrders();
       render();
     }
@@ -1123,4 +1329,3 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 </script>
 </body>
 </html>
-
