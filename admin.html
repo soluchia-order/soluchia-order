@@ -100,7 +100,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media (prefers-reduced-motion: reduce){
   *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
 }
-
 #page{min-height:100vh;padding:var(--sp-6) var(--sp-4) var(--sp-7);position:relative;}
 
 .admin{max-width:1180px;margin:0 auto;}
@@ -199,6 +198,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .edit-form .actions{grid-column:1/-1;display:flex;gap:8px;}
 .edit-form .actions button{flex:1;padding:9px;border-radius:var(--r-sm);border:1px solid var(--line);font-size:.78rem;font-weight:700;cursor:pointer;background:var(--surface);color:var(--ink);}
 .edit-form .actions .save{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+.copy-textarea{width:100%;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.72rem;line-height:1.5;padding:10px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);color:var(--ink);resize:vertical;white-space:pre;overflow:auto;}
 
 .add-panel{background:var(--surface);border:1px dashed var(--line);border-radius:var(--r-md);padding:var(--sp-4);margin-top:var(--sp-4);}
 .add-panel h3{font-family:"Shippori Mincho B1",serif;font-size:1rem;margin-bottom:10px;}
@@ -235,7 +235,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .danger-zone h3{font-size:.95rem;margin-bottom:6px;color:var(--alert);}
 .danger-zone p{font-size:.78rem;color:var(--ink-soft);line-height:1.6;margin-bottom:10px;}
 .danger-zone .mini-btn{background:var(--alert);}
-
 .staff-order{max-width:640px;margin:0 auto;}
 .staff-table-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:420px;}
 .staff-table-btn{aspect-ratio:1;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-md);font-size:1.3rem;font-weight:700;cursor:pointer;color:var(--ink);}
@@ -334,7 +333,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     {number:7, token:"AUHB9F"}, {number:8, token:"Y3XKQG"}, {number:9, token:"LWR468"},
     {number:10, token:"3F6K59"}, {number:11, token:"GCHB26"}, {number:12, token:"2J4A75"}
   ];
-
   // --- Admin login gate -----------------------------------------------
   // This is a static, backend-less page, so this is a deterrent (keeps
   // casual QR scans and curious customers out) rather than real access
@@ -446,7 +444,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     {id:"dolci", jp:"ドルチェ", it:"Dolci"},
     {id:"bevande", jp:"ドリンク", it:"Bevande"}
   ];
-
   var DEFAULT_MENU = [
     {id:"caprese", category:"antipasti", name:"カプレーゼ", sub:"Caprese", desc:"モッツァレラと完熟トマト、バジル、EXVオリーブオイル", price:980, emoji:"🍅", available:true},
     {id:"prosciutto", category:"antipasti", name:"自家製生ハム 3種盛り", sub:"Prosciutto misto", desc:"熟成生ハムの食べ比べ", price:1280, emoji:"🥓", available:true},
@@ -551,7 +548,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   state.sheetSyncStatus = null; // null | "syncing" | "ok" | "error"
   state.sheetSyncLastMsg = null;
   state.sheetSyncLastAt = null;
-
+  // 「かんたんコピー用データ」のクリップボードコピー結果メッセージ（画面表示のみ・保存はしない）。
+  state.copyDataMsg = null;
   function persistFields(fields){
     try{
       var raw = localStorage.getItem(STORAGE_KEY);
@@ -652,10 +650,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       '</div>'
     );
   }
-
   function renderAdminSettings(){
     var liveCount = state.orders.length;
     var sync = state.sheetSync || {url:"", secret:"", enabled:false};
+    var copyRows = buildSalesCopyRows();
+    var copyRowCount = copyRows.length;
+    var copyText = buildSalesCopyText();
     var statusLine = "";
     if(state.sheetSyncStatus === "syncing"){
       statusLine = '<div class="full" style="font-size:.78rem;color:var(--info);">送信中…</div>';
@@ -693,6 +693,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
           '</div>' +
         '</form>' +
 
+        '<div class="qr-section-title" style="margin-top:var(--sp-6);">📋 かんたんコピー用データ</div>' +
+        '<p class="qr-intro">スプレッドシート連携の設定をしなくても、提供完了した注文の商品と日時をタブ区切りテキストとしてコピーし、Googleスプレッドシートやエクセルに直接貼り付けられます（貼り付け先で自動的に列が分かれます）。取り消し済みの注文や、まだ提供前の注文は含まれません。'+(copyRowCount>0?(copyRowCount+'件（商品ごと）のデータがあります。'):'まだ提供完了の注文がありません。')+'</p>' +
+        '<div style="max-width:640px;">' +
+          '<textarea id="sales-copy-textarea" class="copy-textarea" readonly rows="8">'+esc(copyText)+'</textarea>' +
+          (state.copyDataMsg ? '<div class="full" style="font-size:.78rem;color:var(--success);margin:6px 0;">'+esc(state.copyDataMsg)+'</div>' : '') +
+          '<div class="actions" style="display:flex;gap:8px;margin-top:8px;">' +
+            '<button type="button" class="save" data-action="copy-sales-data" style="flex:1;">📋 コピーする</button>' +
+            '<button type="button" data-action="refresh-sales-data" style="flex:1;">更新する</button>' +
+          '</div>' +
+        '</div>' +
+
         '<div class="danger-zone">' +
           '<h3>⚠️ 注文データのリセット</h3>' +
           '<p>現在 '+liveCount+' 件の注文（取り消し済みを含む）が保存されています。テスト注文を試したあとのリセットや、営業開始前の初期化にご利用ください。累計売上・注文管理ボードの内容もすべて0件に戻ります。メニュー、テーブルQR、パスワードは削除されません。スプレッドシートに既に送信済みの行はこの操作では削除されません（スプレッドシート側で直接削除してください）。この操作は元に戻せません。</p>' +
@@ -728,7 +739,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       '</div>'
     );
   }
-
   // --- Staff order entry ("スタッフ注文") ---------------------------------
   // A quick, calculator-style order form for staff: pick a table, tap
   // through the menu to build a cart, confirm — and it lands in the same
@@ -848,7 +858,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       '</div>'
     );
   }
-
   function renderStaffCart(){
     var so = state.staffOrder;
     if(so.cart.length===0){
@@ -993,7 +1002,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     var mins = Math.max(0, Math.round((Date.now()-ts)/60000));
     return mins < 1 ? "たった今" : mins + "分前";
   }
-
   function renderAdminMenu(){
     var cats = CATEGORIES.filter(function(c){ return state.menu.some(function(m){return m.category===c.id;}); });
     var sections = cats.map(function(c){
@@ -1083,7 +1091,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     state.tableTokensRotatedAt = Date.now();
     persistFields({tableTokens: next, tableTokensRotatedAt: state.tableTokensRotatedAt});
   }
-
   function advanceOrder(id){
     var fresh = readFreshOrders();
     var order = fresh.find(function(o){ return String(o.id)===String(id); });
@@ -1284,6 +1291,33 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       maybeSyncOrdersToSheet(state.orders);
     }
   }
+  // --- 「かんたんコピー用データ」（スプレッドシート連携なしの簡易エクスポート）---
+  // 提供完了（売上に計上される）注文だけを対象に、商品ごとに1行のタブ区切り
+  // テキストを組み立てる。取り消し済みの注文や、まだ提供前の注文は含めない。
+  function buildSalesCopyRows(){
+    var rows = [];
+    state.orders.forEach(function(o){
+      if(o.status !== "done") return;
+      var dt = o.editedAt || o.createdAt;
+      var dtTxt = dt ? new Date(dt).toLocaleString("ja-JP") : "";
+      (o.items||[]).forEach(function(it){
+        rows.push([
+          dtTxt,
+          (o.tableNumber===null || o.tableNumber===undefined) ? "-" : String(o.tableNumber),
+          it.name,
+          it.qty,
+          it.price,
+          it.price*it.qty
+        ]);
+      });
+    });
+    return rows;
+  }
+  function buildSalesCopyText(){
+    var header = ["日時","テーブル番号","商品名","数量","単価","小計"];
+    var rows = buildSalesCopyRows();
+    return [header].concat(rows).map(function(r){ return r.join("\t"); }).join("\n");
+  }
 
   function saveEdit(id, form){
     var item = findItem(id);
@@ -1307,7 +1341,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     var id = "item-" + Date.now();
     state.menu.push({id:id, category:category, name:name, sub:sub, desc:desc, price:price, emoji:emoji, available:true});
   }
-
   function handleClick(e){
     var el = e.target.closest("[data-action]");
     if(!el) return;
@@ -1315,7 +1348,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     var id = el.getAttribute("data-id");
 
     switch(action){
-      case "admin-tab": state.adminTab=id; break;
+      case "admin-tab": {
+        state.adminTab = id;
+        if(id === "settings"){
+          state.orders = readFreshOrders();
+          state.copyDataMsg = null;
+        }
+        break;
+      }
       case "advance-order": advanceOrder(id); break;
       case "cancel-order": cancelOrder(id); break;
       case "restore-order": restoreOrder(id); break;
@@ -1341,6 +1381,38 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         break;
       }
       case "reset-all-orders": resetAllOrders(); break;
+      case "copy-sales-data": {
+        var ta = document.getElementById("sales-copy-textarea");
+        var txt = ta ? ta.value : buildSalesCopyText();
+        var done = function(){
+          state.copyDataMsg = "コピーしました。スプレッドシートやエクセルに貼り付けてください。";
+          render();
+        };
+        var fail = function(){
+          if(ta){ ta.focus(); ta.select(); }
+          state.copyDataMsg = "自動コピーに失敗しました。テキストを選択済みなので、そのままコピー（Ctrl/Cmd+C）してください。";
+          render();
+        };
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(txt).then(done).catch(function(){
+            try{
+              if(ta){ ta.focus(); ta.select(); document.execCommand("copy"); done(); }
+              else { fail(); }
+            }catch(e){ fail(); }
+          });
+        } else {
+          try{
+            if(ta){ ta.focus(); ta.select(); document.execCommand("copy"); done(); }
+            else { fail(); }
+          }catch(e){ fail(); }
+        }
+        break;
+      }
+      case "refresh-sales-data": {
+        state.orders = readFreshOrders();
+        state.copyDataMsg = "最新のデータに更新しました。";
+        break;
+      }
       case "sheet-sync-test": {
         var testCfg = state.sheetSync;
         if(!testCfg || !testCfg.url){
