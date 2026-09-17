@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soluchia 管理画面（パステル版プレビュー）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Caveat:wght@500;600;700&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#FFF6FB;
+  --surface:#FFFFFF;
+  --surface-2:#FF9EC7;
+  --surface-2-ink:#FFFFFF;
+  --ink:#5B4B66;
+  --ink-soft:#A98FAE;
+  --line:#FBD9EC;
+  --accent:#FF7FAE;
+  --accent-ink:#FFFFFF;
+  --success:#6FCF97;
+  --success-bg:#E3FBEF;
+  --alert:#FF9466;
+  --alert-bg:#FFF0E6;
+  --info:#8FC1FF;
+  --info-bg:#EAF4FF;
+  --cooking-bg:#FFF3C4;
+  --shadow-card:0 2px 6px rgba(255,158,199,.18), 0 12px 28px -16px rgba(199,141,255,.30);
+  --shadow-pop:0 24px 60px -20px rgba(255,126,178,.40);
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--sp-7:48px;
+  --r-sm:12px;--r-md:20px;--r-lg:30px;--r-pill:999px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#FFF6FB;
+    --surface:#221C16;
+    --surface-2:#FF9EC7;
+    --surface-2-ink:#FFFFFF;
+    --ink:#5B4B66;
+    --ink-soft:#A98FAE;
+    --line:#FBD9EC;
+    --accent:#FF7FAE;
+    --accent-ink:#1B1310;
+    --success:#6FCF97;
+    --success-bg:#E3FBEF;
+    --alert:#FF9466;
+    --alert-bg:#FFF0E6;
+    --info:#8FC1FF;
+    --info-bg:#EAF4FF;
+    --cooking-bg:#FFF3C4;
+    --shadow-card:0 2px 6px rgba(255,158,199,.18), 0 12px 28px -16px rgba(199,141,255,.30);
+    --shadow-pop:0 24px 60px -20px rgba(255,126,178,.40);
+    color-scheme:light;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#FFF6FB;
+  --surface:#221C16;
+  --surface-2:#FF9EC7;
+  --surface-2-ink:#FFFFFF;
+  --ink:#5B4B66;
+  --ink-soft:#A98FAE;
+  --line:#FBD9EC;
+  --accent:#FF7FAE;
+  --accent-ink:#1B1310;
+  --success:#6FCF97;
+  --success-bg:#E3FBEF;
+  --alert:#FF9466;
+  --alert-bg:#FFF0E6;
+  --info:#8FC1FF;
+  --info-bg:#EAF4FF;
+  --cooking-bg:#FFF3C4;
+  --shadow-card:0 2px 6px rgba(255,158,199,.18), 0 12px 28px -16px rgba(199,141,255,.30);
+  --shadow-pop:0 24px 60px -20px rgba(255,126,178,.40);
+  color-scheme:light;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"M PLUS Rounded 1c","Hiragino Kaku Gothic ProN",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+h1,h2,h3,h4{margin:0;text-wrap:balance;}
+p{margin:0;}
+button{font-family:inherit;}
+input,select,textarea{font-family:inherit;}
+a{color:inherit;text-decoration:none;}
+::selection{background:var(--accent);color:var(--accent-ink);}
+.jp-display{font-family:"Kiwi Maru",serif;}
+.it-display{font-family:"Caveat",cursive;font-weight:600;}
+.tabular{font-variant-numeric:tabular-nums;}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
+}
+
+#page{min-height:100vh;padding:var(--sp-6) var(--sp-4) var(--sp-7);position:relative;}
+
+.admin{max-width:1180px;margin:0 auto;}
+.admin-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-5);gap:var(--sp-3);flex-wrap:wrap;}
+.admin-title{font-family:"Kiwi Maru",serif;font-size:1.6rem;}
+.admin-sub{font-size:.8rem;color:var(--ink-soft);margin-top:2px;}
+.back-link{
+  display:inline-block;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-pill);
+  padding:9px 16px;font-size:.8rem;font-weight:600;color:var(--ink);cursor:pointer;
+}
+.back-link:hover{border-color:var(--accent);color:var(--accent);}
+
+.admin-layout{display:grid;grid-template-columns:200px 1fr;gap:var(--sp-5);align-items:start;}
+.admin-nav{display:flex;flex-direction:column;gap:4px;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-md);padding:8px;position:sticky;top:var(--sp-4);}
+.admin-nav button{
+  text-align:left;background:none;border:none;padding:11px 12px;border-radius:var(--r-sm);
+  font-size:.86rem;font-weight:600;color:var(--ink-soft);cursor:pointer;
+}
+.admin-nav button.active{background:var(--surface-2);color:var(--surface-2-ink);}
+.admin-nav button:not(.active):hover{background:var(--bg);color:var(--ink);}
+
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--sp-3);margin-bottom:var(--sp-5);}
+.stat-tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-4);box-shadow:var(--shadow-card);}
+.stat-tile .num{font-size:1.55rem;font-weight:700;font-family:"Kiwi Maru",serif;}
+.stat-tile .lbl{font-size:.72rem;color:var(--ink-soft);letter-spacing:.04em;margin-top:2px;}
+
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4);align-items:start;}
+.kan-col{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-3);min-height:160px;}
+.kan-col-head{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 12px;}
+.kan-col-head .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px;}
+.kan-col-head span.title{font-weight:700;font-size:.85rem;}
+.kan-count{font-size:.72rem;color:var(--ink-soft);background:var(--bg);padding:2px 8px;border-radius:var(--r-pill);}
+.order-card{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;margin-bottom:10px;}
+.order-card:last-child{margin-bottom:0;}
+.order-card-top{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;font-weight:700;}
+.order-card-time{font-size:.68rem;color:var(--ink-soft);}
+.order-items-list{font-size:.76rem;color:var(--ink-soft);margin:8px 0;line-height:1.6;}
+.order-total{font-weight:700;font-size:.85rem;margin-bottom:8px;}
+.order-note{font-size:.72rem;color:var(--accent);background:var(--alert-bg);border-radius:var(--r-sm);padding:5px 8px;margin-bottom:8px;}
+.mini-btn{
+  width:100%;background:var(--accent);color:var(--accent-ink);border:none;border-radius:var(--r-sm);
+  padding:8px;font-size:.76rem;font-weight:700;cursor:pointer;
+}
+.mini-btn.done{background:var(--success);}
+.kan-empty{color:var(--ink-soft);font-size:.76rem;text-align:center;padding:var(--sp-4) 0;}
+
+.menu-admin-cat{margin-bottom:var(--sp-5);}
+.menu-admin-cat h3{font-family:"Kiwi Maru",serif;font-size:1.05rem;margin-bottom:10px;}
+.menu-table{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;box-shadow:var(--shadow-card);}
+.menu-row{
+  display:grid;
+  grid-template-columns:44px 1.6fr 90px 100px 130px;
+  grid-template-areas:"em info pr tog act";
+  gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);
+}
+.menu-row:last-child{border-bottom:none;}
+.menu-row .em{grid-area:em;font-size:1.3rem;}
+.menu-row .info{grid-area:info;min-width:0;}
+.menu-row .nm{font-weight:700;font-size:.85rem;}
+.menu-row .ds{font-size:.72rem;color:var(--ink-soft);margin-top:2px;}
+.menu-row .pr{grid-area:pr;font-weight:700;font-size:.85rem;text-align:right;}
+.avail-toggle{
+  grid-area:tog;
+  border:1px solid var(--line);background:var(--surface);border-radius:var(--r-pill);padding:5px 10px;
+  font-size:.7rem;font-weight:700;cursor:pointer;color:var(--success);
+}
+.avail-toggle.off{color:var(--alert);}
+.row-actions{grid-area:act;display:flex;gap:6px;justify-content:flex-end;}
+.icon-btn{background:none;border:1px solid var(--line);border-radius:var(--r-sm);width:30px;height:30px;cursor:pointer;font-size:.85rem;color:var(--ink-soft);}
+.icon-btn:hover{color:var(--ink);border-color:var(--accent);}
+
+.edit-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;background:var(--bg);border-bottom:1px solid var(--line);}
+.edit-form label{font-size:.68rem;color:var(--ink-soft);display:block;margin-bottom:3px;}
+.edit-form input,.edit-form select,.edit-form textarea{
+  width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px;font-size:.82rem;
+  background:var(--surface);color:var(--ink);
+}
+.edit-form .full{grid-column:1/-1;}
+.edit-form .actions{grid-column:1/-1;display:flex;gap:8px;}
+.edit-form .actions button{flex:1;padding:9px;border-radius:var(--r-sm);border:1px solid var(--line);font-size:.78rem;font-weight:700;cursor:pointer;background:var(--surface);color:var(--ink);}
+.edit-form .actions .save{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+
+.add-panel{background:var(--surface);border:1px dashed var(--line);border-radius:var(--r-md);padding:var(--sp-4);margin-top:var(--sp-4);}
+.add-panel h3{font-family:"Kiwi Maru",serif;font-size:1rem;margin-bottom:10px;}
+
+.qr-intro{font-size:.85rem;color:var(--ink-soft);line-height:1.7;max-width:60ch;margin-bottom:var(--sp-5);}
+.qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--sp-4);}
+.qr-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-4);text-align:center;box-shadow:var(--shadow-card);}
+.qr-card-label{font-weight:700;font-size:.85rem;margin-bottom:10px;}
+.qr-canvas-wrap{background:#fff;border-radius:var(--r-sm);padding:10px;display:inline-flex;align-items:center;justify-content:center;min-height:120px;min-width:120px;}
+.qr-url{font-size:.66rem;color:var(--ink-soft);margin-top:10px;word-break:break-all;line-height:1.5;}
+.qr-section-title{font-family:"Kiwi Maru",serif;font-size:1.05rem;margin-bottom:var(--sp-3);}
+
+.login-gate{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:var(--sp-4);}
+.login-card{
+  width:100%;max-width:340px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:var(--sp-6) var(--sp-5);box-shadow:var(--shadow-pop);display:flex;flex-direction:column;gap:var(--sp-3);
+  text-align:center;
+}
+.login-title{font-size:1.6rem;}
+.login-sub{font-size:.8rem;color:var(--ink-soft);line-height:1.6;margin-bottom:var(--sp-2);}
+.login-card input{
+  width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;font-size:.95rem;
+  background:var(--bg);color:var(--ink);text-align:center;letter-spacing:.05em;
+}
+.login-card button{
+  width:100%;background:var(--accent);color:var(--accent-ink);border:none;border-radius:var(--r-sm);
+  padding:12px;font-size:.9rem;font-weight:700;cursor:pointer;
+}
+.login-card button:disabled{opacity:.6;cursor:default;}
+.login-error{font-size:.78rem;color:var(--alert);background:var(--alert-bg);border-radius:var(--r-sm);padding:8px 10px;}
+
+.settings-panel{max-width:520px;}
+
+.staff-order{max-width:640px;margin:0 auto;}
+.staff-table-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:420px;}
+.staff-table-btn{aspect-ratio:1;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-md);font-size:1.3rem;font-weight:700;cursor:pointer;color:var(--ink);}
+.staff-table-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.staff-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-4);flex-wrap:wrap;gap:8px;}
+.staff-table-chip{background:var(--surface-2);color:var(--surface-2-ink);border:none;border-radius:var(--r-pill);padding:8px 16px;font-size:.85rem;font-weight:700;cursor:pointer;}
+
+.staff-cat-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:var(--sp-3);scrollbar-width:none;}
+.staff-cat-row::-webkit-scrollbar{display:none;}
+.staff-cat-pill{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);padding:7px 15px;border-radius:var(--r-pill);font-size:.8rem;font-weight:600;cursor:pointer;}
+.staff-cat-pill.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+
+.staff-item-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center;}
+.staff-item-row:last-child{border-bottom:none;}
+.staff-item-row .em{font-size:1.4rem;flex:none;width:44px;height:44px;border-radius:var(--r-md);background:var(--bg);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);}
+.staff-item-row .info{flex:1;min-width:0;}
+.staff-item-row .nm{font-weight:700;font-size:.88rem;}
+.staff-item-row .pr{font-size:.78rem;color:var(--ink-soft);}
+.staff-stepper{display:flex;align-items:center;gap:8px;flex:none;}
+.staff-stepper button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:1rem;cursor:pointer;color:var(--ink);}
+.staff-add-btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:50%;width:34px;height:34px;font-size:1.15rem;cursor:pointer;flex:none;}
+.staff-sold{font-size:.68rem;font-weight:700;color:var(--alert);background:var(--alert-bg);padding:3px 9px;border-radius:var(--r-pill);flex:none;}
+
+.staff-cart-bar{
+  position:sticky;bottom:14px;background:var(--surface-2);color:var(--surface-2-ink);
+  border-radius:var(--r-lg);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;
+  box-shadow:var(--shadow-pop);cursor:pointer;border:none;width:100%;margin-top:var(--sp-4);
+}
+.staff-cart-bar .count{background:var(--accent);color:var(--accent-ink);border-radius:var(--r-pill);padding:2px 9px;font-size:.72rem;font-weight:700;margin-right:8px;}
+
+.staff-cart-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+.staff-cart-row:last-child{border-bottom:none;}
+.staff-note-field{width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:10px;font-size:.85rem;background:var(--surface);color:var(--ink);margin-top:8px;resize:vertical;min-height:56px;}
+
+.back-btn{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink);padding:4px;}
+.primary-btn{width:100%;background:var(--accent);color:var(--accent-ink);border:none;border-radius:var(--r-md);padding:14px;font-size:.95rem;font-weight:700;cursor:pointer;}
+.summary-line{display:flex;justify-content:space-between;font-size:.9rem;color:var(--ink-soft);padding:4px 0;}
+.qty-num{min-width:16px;text-align:center;font-weight:700;font-size:.85rem;}
+
+@media (max-width:760px){
+  .admin-layout{grid-template-columns:1fr;}
+  .admin-nav{flex-direction:row;position:static;overflow-x:auto;}
+  .kanban{grid-template-columns:1fr;}
+  .menu-row{grid-template-columns:36px 1fr 70px;grid-template-areas:"em info pr" "em tog act";row-gap:8px;}
+  .menu-row .avail-toggle{justify-self:start;}
+  .edit-form{grid-template-columns:1fr;}
+}
+</style>
+
+</head>
+<body>
+
+<div id="page"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Isolated from the main site's storage key on purpose — this pastel
+  // preview is a separate sandbox so trying it out never touches real
+  // orders, tokens, or menu edits on the live production site.
+  var STORAGE_KEY = "soluchia-state-pastel-v1";
+
+  // This is the pastel-preview pair: it links to index-pastel.html (the
+  // pastel customer page), not the production index.html, so QR codes and
+  // the "お客様画面を見る" link generated from here always stay inside the
+  // pastel sandbox.
+  var CUSTOMER_ARTIFACT_URL = "https://claude.ai/code/artifact/a3203bb0-e606-4ba0-8895-c63463a52e33";
+  function customerBaseUrl(){
+    // Real deployment (e.g. GitHub Pages): this file is literally served as
+    // ".../admin-pastel.html" with index-pastel.html sitting right next to
+    // it — derive the link from our own URL. Anything else (previewing this
+    // page as a Claude artifact) does NOT end in "admin-pastel.html" —
+    // Claude assigns its own opaque per-artifact URL, and that URL's actual
+    // origin isn't reliably detectable from here — so fall back to the
+    // known customer artifact URL directly rather than guessing a hostname.
+    if(/admin-pastel\.html$/i.test(window.location.pathname)){
+      return window.location.origin + window.location.pathname.replace(/admin-pastel\.html$/i, "") + "index-pastel.html";
+    }
+    return CUSTOMER_ARTIFACT_URL;
+  }
+
+  // Each table gets a random token instead of a guessable sequential number,
+  // so the ordering link can't be reached by typing ?t=1, ?t=2, etc. This is
+  // the bootstrap default only, identical to DEFAULT_TABLE_TOKENS in the
+  // customer page — it's what a brand-new deployment starts from before any
+  // rotation has happened. Once rotated (below), the active list lives in
+  // shared storage under `tableTokens` and both pages read that instead.
+  var DEFAULT_TABLE_TOKENS = [
+    {number:1, token:"J9BVZY"}, {number:2, token:"EDU782"}, {number:3, token:"DD8GAX"},
+    {number:4, token:"5ZVXUE"}, {number:5, token:"NLJW5L"}, {number:6, token:"QMULFC"},
+    {number:7, token:"AUHB9F"}, {number:8, token:"Y3XKQG"}, {number:9, token:"LWR468"},
+    {number:10, token:"3F6K59"}, {number:11, token:"GCHB26"}, {number:12, token:"2J4A75"}
+  ];
+
+  // --- Admin login gate -----------------------------------------------
+  // This is a static, backend-less page, so this is a deterrent (keeps
+  // casual QR scans and curious customers out) rather than real access
+  // control — anyone who inspects the page source and puts in the work
+  // could bypass it. We never store the password itself, only a SHA-256
+  // hash, and we compare hashes rather than plain text.
+  var ADMIN_SESSION_KEY = "soluchia-admin-session-pastel-v1";
+  var ADMIN_SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours — about one shift
+  // SHA-256 of the initial default password "soluchia2026". Changing the
+  // password from the 設定 tab overwrites `adminPasswordHash` in this
+  // browser's shared storage — this constant stays as the fallback for a
+  // fresh browser/device that has never set its own password.
+  var DEFAULT_ADMIN_PASSWORD_HASH = "610b00b0986661225caaa7220ae6857a8a3e5825a6eeced1ce92e770ca209cee";
+
+  // Self-contained SHA-256 (no window.crypto.subtle dependency). subtle.digest
+  // only works in a "secure context", which some browsers do NOT consider a
+  // locally-opened file:// page to be — that left the login button stuck on
+  // "確認中…" with no way in. This pure-JS version works identically on any
+  // browser, https or not, so login can't silently break like that again.
+  function utf8Bytes(str){
+    try{ return unescape(encodeURIComponent(str)); }
+    catch(e){ return str; }
+  }
+  function sha256Hex(text){
+    var str = utf8Bytes(String(text));
+    function rrot(v, n){ return (v>>>n) | (v<<(32-n)); }
+    var maxWord = Math.pow(2,32);
+    var h = [], k = [];
+    var primeCount = 0;
+    var isComposite = {};
+    for(var candidate=2; primeCount<64; candidate++){
+      if(!isComposite[candidate]){
+        for(var i=0;i<313;i+=candidate){ isComposite[i]=candidate; }
+        h[primeCount] = (Math.pow(candidate,0.5)*maxWord)|0;
+        k[primeCount++] = (Math.pow(candidate,1/3)*maxWord)|0;
+      }
+    }
+    str += "\x80";
+    while(str.length % 64 - 56){ str += "\x00"; }
+    var words = [];
+    for(i=0;i<str.length;i++){
+      var c = str.charCodeAt(i);
+      words[i>>2] |= c << ((3-(i%4))*8);
+    }
+    var originalByteLen = utf8Bytes(String(text)).length;
+    var originalBitLen = originalByteLen*8;
+    words[words.length] = Math.floor(originalBitLen/maxWord);
+    words[words.length] = originalBitLen;
+
+    for(var j=0;j<words.length;){
+      var w = words.slice(j, j+=16);
+      var old = h;
+      h = h.slice(0,8);
+      for(i=0;i<64;i++){
+        var w15 = w[i-15], w2 = w[i-2];
+        var a = h[0], e = h[4];
+        var t1 = h[7]
+          + (rrot(e,6) ^ rrot(e,11) ^ rrot(e,25))
+          + ((e & h[5]) ^ (~e & h[6]))
+          + k[i]
+          + (w[i] = (i<16) ? w[i] : (
+              w[i-16]
+              + (rrot(w15,7) ^ rrot(w15,18) ^ (w15>>>3))
+              + w[i-7]
+              + (rrot(w2,17) ^ rrot(w2,19) ^ (w2>>>10))
+            )|0
+          );
+        var t2 = (rrot(a,2) ^ rrot(a,13) ^ rrot(a,22))
+          + ((a & h[1]) ^ (a & h[2]) ^ (h[1] & h[2]));
+        h = [(t1+t2)|0].concat(h);
+        h[4] = (h[4]+t1)|0;
+      }
+      for(i=0;i<8;i++){ h[i] = (h[i]+old[i])|0; }
+    }
+
+    var result = "";
+    for(i=0;i<8;i++){
+      for(var b=3;b+1;b--){
+        var byte = (h[i]>>(b*8)) & 255;
+        result += (byte<16 ? "0" : "") + byte.toString(16);
+      }
+    }
+    return result;
+  }
+
+  function isSessionValid(){
+    try{
+      var raw = localStorage.getItem(ADMIN_SESSION_KEY);
+      if(!raw) return false;
+      var parsed = JSON.parse(raw);
+      return !!(parsed && typeof parsed.expiresAt === "number" && Date.now() < parsed.expiresAt);
+    }catch(e){ return false; }
+  }
+  function startSession(){
+    try{
+      localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({expiresAt: Date.now() + ADMIN_SESSION_DURATION_MS}));
+    }catch(e){ /* ignore */ }
+  }
+  function clearSession(){
+    try{ localStorage.removeItem(ADMIN_SESSION_KEY); }catch(e){ /* ignore */ }
+  }
+
+  var CATEGORIES = [
+    {id:"antipasti", jp:"前菜", it:"Antipasti"},
+    {id:"insalate", jp:"サラダ", it:"Insalate"},
+    {id:"pasta", jp:"パスタ", it:"Pasta"},
+    {id:"pizza", jp:"ピザ", it:"Pizza"},
+    {id:"secondi", jp:"メイン", it:"Secondi"},
+    {id:"dolci", jp:"ドルチェ", it:"Dolci"},
+    {id:"bevande", jp:"ドリンク", it:"Bevande"}
+  ];
+
+  var DEFAULT_MENU = [
+    {id:"caprese", category:"antipasti", name:"カプレーゼ", sub:"Caprese", desc:"モッツァレラと完熟トマト、バジル、EXVオリーブオイル", price:980, emoji:"🍅", available:true},
+    {id:"prosciutto", category:"antipasti", name:"自家製生ハム 3種盛り", sub:"Prosciutto misto", desc:"熟成生ハムの食べ比べ", price:1280, emoji:"🥓", available:true},
+    {id:"bruschetta", category:"antipasti", name:"ブルスケッタ 3種", sub:"Bruschetta trio", desc:"トマト、オリーブ、ゴルゴンゾーラ蜂蜜がけ", price:880, emoji:"🍞", available:true},
+    {id:"carpaccio", category:"antipasti", name:"白身魚のカルパッチョ", sub:"Carpaccio di pesce", desc:"本日の白身魚、柑橘のマリネ", price:1180, emoji:"🐟", available:true},
+
+    {id:"mista", category:"insalate", name:"彩り野菜のサラダ", sub:"Insalata mista", desc:"季節野菜のバルサミコドレッシング", price:780, emoji:"🥗", available:true},
+    {id:"caesar", category:"insalate", name:"シーザーサラダ", sub:"Insalata Caesar", desc:"自家製ドレッシングとパルミジャーノ", price:880, emoji:"🥬", available:true},
+
+    {id:"bolognese", category:"pasta", name:"自家製タリアテッレ ボロネーゼ", sub:"Tagliatelle al ragù", desc:"牛肉を4時間煮込んだ濃厚ソース", price:1580, emoji:"🍝", available:true},
+    {id:"carbonara", category:"pasta", name:"カルボナーラ", sub:"Carbonara", desc:"卵黄、グアンチャーレ、ペコリーノ", price:1480, emoji:"🍝", available:true},
+    {id:"peperoncino", category:"pasta", name:"ペペロンチーノ", sub:"Aglio e olio e peperoncino", desc:"にんにくと唐辛子のシンプルな一皿", price:1280, emoji:"🌶️", available:true},
+    {id:"granchio", category:"pasta", name:"渡り蟹のトマトクリームパスタ", sub:"Granchio in crema di pomodoro", desc:"渡り蟹の旨味を凝縮", price:1980, emoji:"🦀", available:true},
+    {id:"riccio", category:"pasta", name:"雲丹とレモンのクリームパスタ", sub:"Riccio di mare al limone", desc:"数量限定・季節のスペシャリテ", price:2380, emoji:"🍋", available:false},
+
+    {id:"margherita", category:"pizza", name:"マルゲリータ", sub:"Margherita", desc:"サンマルツァーノトマトと水牛モッツァレラ", price:1480, emoji:"🍕", available:true},
+    {id:"quattro", category:"pizza", name:"クアトロフォルマッジ", sub:"Quattro formaggi", desc:"4種のチーズと蜂蜜がけ", price:1780, emoji:"🍕", available:true},
+    {id:"diavola", category:"pizza", name:"ディアボラ", sub:"Diavola", desc:"サラミピカンテと辛味オイル", price:1680, emoji:"🍕", available:true},
+
+    {id:"agnello", category:"secondi", name:"仔羊のロースト", sub:"Agnello arrosto", desc:"ローズマリー風味、赤ワインソース", price:2480, emoji:"🍖", available:true},
+    {id:"tagliata", category:"secondi", name:"牛フィレ肉のタリアータ", sub:"Tagliata di manzo", desc:"ルッコラとパルミジャーノを添えて", price:2980, emoji:"🥩", available:true},
+    {id:"acquapazza", category:"secondi", name:"白身魚のアクアパッツァ", sub:"Pesce all'acqua pazza", desc:"トマトとオリーブの旨味スープ仕立て", price:2280, emoji:"🐠", available:true},
+
+    {id:"tiramisu", category:"dolci", name:"ティラミス", sub:"Tiramisù", desc:"自家製、エスプレッソをたっぷりと", price:780, emoji:"🍮", available:true},
+    {id:"pannacotta", category:"dolci", name:"パンナコッタ", sub:"Panna cotta", desc:"季節のベリーソース", price:680, emoji:"🍨", available:true},
+    {id:"gelato", category:"dolci", name:"ジェラート 3種盛り", sub:"Gelato misto", desc:"本日のフレーバーからお選びいただけます", price:750, emoji:"🍦", available:true},
+
+    {id:"water", category:"bevande", name:"イタリア産スパークリングウォーター", sub:"Acqua frizzante", desc:"", price:480, emoji:"🫧", available:true},
+    {id:"housewine", category:"bevande", name:"ハウスワイン グラス(赤/白)", sub:"Vino della casa", desc:"", price:780, emoji:"🍷", available:true},
+    {id:"espresso", category:"bevande", name:"エスプレッソ", sub:"Espresso", desc:"", price:450, emoji:"☕", available:true},
+    {id:"cappuccino", category:"bevande", name:"カプチーノ", sub:"Cappuccino", desc:"", price:550, emoji:"☕", available:true}
+  ];
+
+  var STATUS = {
+    received:{label:"受付済み", cls:"st-received", dot:"var(--info)"},
+    cooking:{label:"調理中", cls:"st-cooking", dot:"var(--accent)"},
+    done:{label:"提供完了", cls:"st-done", dot:"var(--success)"}
+  };
+  var STATUS_ORDER = ["received","cooking","done"];
+
+  function loadState(){
+    var fallback = {
+      menu: JSON.parse(JSON.stringify(DEFAULT_MENU)),
+      orders: [],
+      adminTab: "orders",
+      editingId: null,
+      tableTokens: JSON.parse(JSON.stringify(DEFAULT_TABLE_TOKENS)),
+      tableTokensRotatedAt: null,
+      adminPasswordHash: DEFAULT_ADMIN_PASSWORD_HASH
+    };
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return fallback;
+      var parsed = JSON.parse(raw);
+      if(!parsed || typeof parsed !== "object") return fallback;
+      if(Array.isArray(parsed.menu)) fallback.menu = parsed.menu;
+      if(Array.isArray(parsed.orders)) fallback.orders = parsed.orders;
+      if(Array.isArray(parsed.tableTokens) && parsed.tableTokens.length) fallback.tableTokens = parsed.tableTokens;
+      if(parsed.tableTokensRotatedAt) fallback.tableTokensRotatedAt = parsed.tableTokensRotatedAt;
+      if(typeof parsed.adminPasswordHash === "string" && parsed.adminPasswordHash) fallback.adminPasswordHash = parsed.adminPasswordHash;
+      return fallback;
+    }catch(e){
+      return fallback;
+    }
+  }
+
+  var state = loadState();
+  state.authed = isSessionValid();
+  state.loginError = null;
+  state.settingsMsg = null;
+  state.settingsMsgOk = false;
+  // Staff order entry ("スタッフ注文") is a session-only workflow — a server
+  // taps through the menu on their own phone to place an order for a table,
+  // like a POS calculator. It isn't persisted to shared storage; only the
+  // finished order (pushed into `orders` below) is.
+  state.staffOrder = { tableNumber: null, screen: "menu", activeCategory: CATEGORIES[0].id, cart: [], note: "" };
+  state.staffOrderConfirmMsg = null;
+
+  function persistFields(fields){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      var current = {};
+      if(raw){ try{ current = JSON.parse(raw) || {}; }catch(e){ current = {}; } }
+      Object.assign(current, fields);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+    }catch(e){ /* storage unavailable — continue in memory */ }
+  }
+
+  // `orders` is written by both this page (status changes) and the separate
+  // customer page (new orders). Always read the latest copy from storage
+  // right before mutating it, so a new order placed on a customer's phone
+  // is never lost to a stale in-memory array here.
+  function readFreshOrders(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && Array.isArray(parsed.orders)) return parsed.orders;
+      }
+    }catch(e){ /* ignore */ }
+    return state.orders.slice();
+  }
+
+  function yen(n){ return "¥" + Number(n).toLocaleString("ja-JP"); }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function findItem(id){ return state.menu.find(function(m){return m.id===id;}); }
+
+  function render(){
+    if(!state.authed){
+      document.getElementById("page").innerHTML = renderLoginGate();
+      var pwField = document.getElementById("login-password");
+      if(pwField) pwField.focus();
+      return;
+    }
+    document.getElementById("page").innerHTML = renderAdmin();
+    persistFields({menu: state.menu});
+    if(state.adminTab === "qr"){ populateQRCodes(); }
+  }
+
+  function renderLoginGate(){
+    return (
+      '<div class="login-gate">' +
+        '<form id="login-form" class="login-card">' +
+          '<div class="login-title jp-display">Soluchia</div>' +
+          '<div class="login-sub">スタッフ用の管理画面です。パスワードを入力してください。</div>' +
+          '<input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">' +
+          (state.loginError ? '<div class="login-error">'+esc(state.loginError)+'</div>' : '') +
+          '<button type="submit">ログイン</button>' +
+        '</form>' +
+      '</div>'
+    );
+  }
+
+  function populateQRCodes(){
+    var link = customerBaseUrl();
+    var targets = state.tableTokens.map(function(t){
+      return {id:"qr-table-"+t.number, url: link+"?t="+t.token};
+    });
+    targets.forEach(function(t){
+      var el = document.getElementById(t.id);
+      if(!el) return;
+      el.innerHTML = "";
+      if(typeof QRCode === "undefined"){
+        el.innerHTML = '<span style="font-size:.68rem;color:var(--alert);">QR生成ライブラリを読み込めませんでした</span>';
+        return;
+      }
+      new QRCode(el, {text:t.url, width:120, height:120, colorDark:"#5B4B66", colorLight:"#ffffff"});
+    });
+  }
+
+  function renderAdmin(){
+    var body = state.adminTab === "menu" ? renderAdminMenu()
+      : state.adminTab === "qr" ? renderAdminQR()
+      : state.adminTab === "settings" ? renderAdminSettings()
+      : state.adminTab === "staff-order" ? renderAdminStaffOrder()
+      : renderAdminOrders();
+    return (
+      '<div class="admin">' +
+        '<div class="admin-head">' +
+          '<div><div class="admin-title jp-display">Soluchia ・ 管理画面</div><div class="admin-sub">注文とメニューをリアルタイムに管理します</div></div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+            '<a class="back-link" href="'+esc(customerBaseUrl())+'">👀 お客様画面を見る</a>' +
+            '<button class="back-link" type="button" data-action="logout">🔒 ログアウト</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="admin-layout">' +
+          '<div class="admin-nav">' +
+            '<button class="'+(state.adminTab==='orders'?'active':'')+'" data-action="admin-tab" data-id="orders">📋 注文管理</button>' +
+            '<button class="'+(state.adminTab==='staff-order'?'active':'')+'" data-action="admin-tab" data-id="staff-order">🧮 スタッフ注文</button>' +
+            '<button class="'+(state.adminTab==='menu'?'active':'')+'" data-action="admin-tab" data-id="menu">🍽 メニュー管理</button>' +
+            '<button class="'+(state.adminTab==='qr'?'active':'')+'" data-action="admin-tab" data-id="qr">📱 テーブルQR</button>' +
+            '<button class="'+(state.adminTab==='settings'?'active':'')+'" data-action="admin-tab" data-id="settings">⚙️ 設定</button>' +
+          '</div>' +
+          '<div>' + body + '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderAdminSettings(){
+    return (
+      '<div class="settings-panel">' +
+        '<div class="qr-section-title">管理画面のパスワード変更</div>' +
+        '<p class="qr-intro">このデバイス（このブラウザ）でログインする際のパスワードを変更します。変更後は次回ログインからこの端末で新しいパスワードが必要です。別の端末やブラウザではまだ変更されないのでご注意ください。</p>' +
+        '<form id="change-password-form" class="edit-form" style="max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow-card);">' +
+          '<div class="full"><label>現在のパスワード</label><input type="password" id="current-password" autocomplete="current-password"></div>' +
+          '<div class="full"><label>新しいパスワード（4文字以上）</label><input type="password" id="new-password" autocomplete="new-password"></div>' +
+          '<div class="full"><label>新しいパスワード（確認）</label><input type="password" id="new-password-confirm" autocomplete="new-password"></div>' +
+          (state.settingsMsg ? '<div class="full login-error" style="color:'+(state.settingsMsgOk?"var(--success)":"var(--alert)")+';background:'+(state.settingsMsgOk?"var(--success-bg)":"var(--alert-bg)")+';">'+esc(state.settingsMsg)+'</div>' : '') +
+          '<div class="actions"><button type="submit" class="save">パスワードを変更</button></div>' +
+        '</form>' +
+      '</div>'
+    );
+  }
+
+  function renderAdminQR(){
+    var tableCards = state.tableTokens.map(function(t){
+      return (
+        '<div class="qr-card">' +
+          '<div class="qr-card-label">'+t.number+'番テーブル</div>' +
+          '<div class="qr-canvas-wrap" id="qr-table-'+t.number+'"></div>' +
+        '</div>'
+      );
+    }).join('');
+    var rotatedTxt = state.tableTokensRotatedAt
+      ? ("最終更新：" + new Date(state.tableTokensRotatedAt).toLocaleString("ja-JP"))
+      : "最終更新：初期設定のまま(未更新)";
+    return (
+      '<p class="qr-intro">各テーブルにこのQRコードを設置してください。お客様がスマホで読み取ると、そのテーブル専用のリンクからメニューが開きます。テーブル番号を手入力したり、他のテーブルの番号に書き換えたりしてもご注文いただけない仕組みです。</p>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:var(--sp-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;">' +
+        '<div style="font-size:.78rem;color:var(--ink-soft);">'+esc(rotatedTxt)+'</div>' +
+        '<button class="mini-btn" style="width:auto;padding:9px 16px;" data-action="regen-tokens">🔄 トークンを再発行する</button>' +
+      '</div>' +
+      '<div class="qr-section-title">テーブル別QRコード</div>' +
+      '<div class="qr-grid">' + tableCards + '</div>' +
+      '<div style="margin-top:var(--sp-5);background:var(--info-bg);border-radius:var(--r-md);padding:var(--sp-4);">' +
+        '<div style="font-weight:700;font-size:.85rem;color:var(--info);margin-bottom:6px;">⚠️ 本番のQRコードを実際に無効化するには</div>' +
+        '<p style="font-size:.78rem;color:var(--ink-soft);line-height:1.7;margin:0;">この端末（このブラウザ）では、上のボタンで作った新しいQRコードがすぐに有効になります。ただし印刷済みで店舗に置いてある古いQRコードは、公開しているサイトのコード自体を新しいトークンで更新・再公開するまでは無効になりません。準備ができたら「QRコードを入れ替えて」とお伝えいただければ、コードの更新と再公開まで対応します。</p>' +
+      '</div>'
+    );
+  }
+
+  // --- Staff order entry ("スタッフ注文") ---------------------------------
+  // A quick, calculator-style order form for staff: pick a table, tap
+  // through the menu to build a cart, confirm — and it lands in the same
+  // `orders` list (and the 注文管理 kanban) as a customer's own QR order.
+  function staffCartQty(itemId){
+    var c = state.staffOrder.cart.find(function(c){ return c.itemId===itemId; });
+    return c ? c.qty : 0;
+  }
+  function staffSetCartQty(itemId, qty){
+    var cart = state.staffOrder.cart;
+    var existing = cart.find(function(c){ return c.itemId===itemId; });
+    if(qty<=0){
+      state.staffOrder.cart = cart.filter(function(c){ return c.itemId!==itemId; });
+    } else if(existing){
+      existing.qty = qty;
+    } else {
+      cart.push({itemId:itemId, qty:qty});
+    }
+  }
+  function staffCartTotal(){
+    return state.staffOrder.cart.reduce(function(s,c){
+      var it = findItem(c.itemId);
+      return s + (it ? it.price*c.qty : 0);
+    }, 0);
+  }
+  function staffConfirmOrder(){
+    var so = state.staffOrder;
+    if(so.cart.length===0) return;
+    var fresh = readFreshOrders();
+    var items = so.cart.map(function(c){
+      var it = findItem(c.itemId);
+      return {name: it.name, price: it.price, qty: c.qty};
+    });
+    var newId = fresh.reduce(function(m,o){ return Math.max(m, o.id); }, 0) + 1;
+    var order = {
+      id: newId,
+      tableNumber: so.tableNumber,
+      items: items,
+      total: staffCartTotal(),
+      note: so.note,
+      status: "received",
+      createdAt: Date.now(),
+      source: "staff"
+    };
+    fresh.unshift(order);
+    state.orders = fresh;
+    persistFields({orders: fresh});
+    so.cart = [];
+    so.note = "";
+    so.screen = "menu";
+    state.staffOrderConfirmMsg = "注文 No." + newId + "（" + so.tableNumber + "番テーブル）を送信しました。";
+  }
+
+  function renderAdminStaffOrder(){
+    var so = state.staffOrder;
+    if(!so.tableNumber){ return renderStaffTableSelect(); }
+    return so.screen === "cart" ? renderStaffCart() : renderStaffMenu();
+  }
+
+  function renderStaffTableSelect(){
+    var buttons = state.tableTokens.slice().sort(function(a,b){ return a.number-b.number; }).map(function(t){
+      return '<button class="staff-table-btn" data-action="staff-pick-table" data-id="'+t.number+'">'+t.number+'</button>';
+    }).join('');
+    return (
+      '<div class="staff-order">' +
+        '<p class="qr-intro">注文するテーブル番号を選んでください。</p>' +
+        '<div class="staff-table-grid">'+buttons+'</div>' +
+      '</div>'
+    );
+  }
+
+  function renderStaffMenu(){
+    var so = state.staffOrder;
+    var confirmMsg = state.staffOrderConfirmMsg;
+    state.staffOrderConfirmMsg = null; // one-shot: shown for this render only
+    var cats = CATEGORIES.filter(function(c){ return state.menu.some(function(m){return m.category===c.id;}); });
+    var items = state.menu.filter(function(m){ return m.category===so.activeCategory; });
+    var rows = items.map(function(item){
+      var qty = staffCartQty(item.id);
+      var controls;
+      if(!item.available){
+        controls = '<span class="staff-sold">売り切れ</span>';
+      } else if(qty>0){
+        controls = '<div class="staff-stepper">' +
+          '<button data-action="staff-dec" data-id="'+item.id+'">−</button>' +
+          '<span class="qty-num tabular">'+qty+'</span>' +
+          '<button data-action="staff-inc" data-id="'+item.id+'">+</button>' +
+        '</div>';
+      } else {
+        controls = '<button class="staff-add-btn" data-action="staff-inc" data-id="'+item.id+'" aria-label="追加">+</button>';
+      }
+      return (
+        '<div class="staff-item-row">' +
+          '<div class="em">'+item.emoji+'</div>' +
+          '<div class="info"><div class="nm">'+esc(item.name)+'</div><div class="pr tabular">'+yen(item.price)+'</div></div>' +
+          controls +
+        '</div>'
+      );
+    }).join('');
+
+    var count = so.cart.reduce(function(s,c){ return s+c.qty; }, 0);
+
+    return (
+      '<div class="staff-order">' +
+        (confirmMsg ? '<div class="login-error" style="color:var(--success);background:var(--success-bg);margin-bottom:var(--sp-4);">'+esc(confirmMsg)+'</div>' : '') +
+        '<div class="staff-head">' +
+          '<button class="staff-table-chip" data-action="staff-change-table">🪑 '+so.tableNumber+'番テーブル（変更）</button>' +
+        '</div>' +
+        '<div class="staff-cat-row">' +
+          cats.map(function(c){ return '<button class="staff-cat-pill'+(c.id===so.activeCategory?' active':'')+'" data-action="staff-set-cat" data-id="'+c.id+'">'+esc(c.jp)+'</button>'; }).join('') +
+        '</div>' +
+        rows +
+        (count>0 ?
+          '<button class="staff-cart-bar" data-action="staff-open-cart"><span><span class="count tabular">'+count+'</span>点</span><span class="tabular">'+yen(staffCartTotal())+'　確認へ →</span></button>'
+          : '') +
+      '</div>'
+    );
+  }
+
+  function renderStaffCart(){
+    var so = state.staffOrder;
+    if(so.cart.length===0){
+      return (
+        '<div class="staff-order">' +
+          '<div class="staff-head"><button class="back-btn" data-action="staff-back-to-menu" aria-label="戻る">←</button><div class="qr-section-title" style="margin:0;">注文内容の確認</div></div>' +
+          '<p class="qr-intro">カートは空です。</p>' +
+        '</div>'
+      );
+    }
+    var rows = so.cart.map(function(c){
+      var it = findItem(c.itemId);
+      if(!it) return '';
+      return (
+        '<div class="staff-cart-row">' +
+          '<div class="em" style="width:40px;height:40px;font-size:1.2rem;flex:none;border-radius:var(--r-md);background:var(--bg);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);">'+it.emoji+'</div>' +
+          '<div class="info" style="flex:1;min-width:0;">' +
+            '<div class="nm" style="font-weight:700;font-size:.88rem;">'+esc(it.name)+'</div>' +
+            '<div class="pr tabular" style="font-size:.78rem;color:var(--ink-soft);">'+yen(it.price)+' × '+c.qty+' = '+yen(it.price*c.qty)+'</div>' +
+            '<div class="staff-stepper" style="margin-top:6px;">' +
+              '<button data-action="staff-dec" data-id="'+it.id+'">−</button>' +
+              '<span class="qty-num tabular">'+c.qty+'</span>' +
+              '<button data-action="staff-inc" data-id="'+it.id+'">+</button>' +
+            '</div>' +
+          '</div>' +
+          '<button class="icon-btn" data-action="staff-remove" data-id="'+it.id+'" aria-label="削除">🗑</button>' +
+        '</div>'
+      );
+    }).join('');
+
+    return (
+      '<div class="staff-order">' +
+        '<div class="staff-head">' +
+          '<button class="back-btn" data-action="staff-back-to-menu" aria-label="戻る">←</button>' +
+          '<button class="staff-table-chip" data-action="staff-change-table">🪑 '+so.tableNumber+'番テーブル（変更）</button>' +
+        '</div>' +
+        rows +
+        '<label style="display:block;margin-top:var(--sp-4);font-size:.78rem;color:var(--ink-soft);">備考（任意）</label>' +
+        '<textarea class="staff-note-field" data-action="staff-note" placeholder="例：取り分け皿を多めに">'+esc(so.note||'')+'</textarea>' +
+        '<div class="summary-line" style="margin-top:var(--sp-4);"><span>合計</span><span class="tabular">'+yen(staffCartTotal())+'</span></div>' +
+        '<button class="primary-btn" style="margin-top:var(--sp-3);" data-action="staff-confirm-order">この内容で注文を確定する</button>' +
+      '</div>'
+    );
+  }
+
+  function renderAdminOrders(){
+    var today = state.orders;
+    var revenue = today.reduce(function(s,o){ return s+o.total; },0);
+    var active = today.filter(function(o){ return o.status!=='done'; }).length;
+
+    var stat = '<div class="stat-row">' +
+      '<div class="stat-tile"><div class="num tabular">'+today.length+'</div><div class="lbl">本日の注文件数</div></div>' +
+      '<div class="stat-tile"><div class="num tabular">'+active+'</div><div class="lbl">対応中の注文</div></div>' +
+      '<div class="stat-tile"><div class="num tabular">'+yen(revenue)+'</div><div class="lbl">本日の売上（見込み）</div></div>' +
+    '</div>';
+
+    var cols = STATUS_ORDER.map(function(key){
+      var st = STATUS[key];
+      var orders = today.filter(function(o){ return o.status===key; }).sort(function(a,b){return a.createdAt-b.createdAt;});
+      var cards = orders.map(function(o){
+        var itemsTxt = o.items.map(function(i){ return esc(i.name)+' ×'+i.qty; }).join('　');
+        var nextLabel = key==='received' ? '調理を開始する' : (key==='cooking' ? '提供完了にする' : '');
+        var btn = nextLabel ? '<button class="mini-btn'+(key==='cooking'?' done':'')+'" data-action="advance-order" data-id="'+o.id+'">'+nextLabel+'</button>' : '';
+        return (
+          '<div class="order-card">' +
+            '<div class="order-card-top"><span>No.'+o.id+' ・ '+esc(o.tableNumber)+'番テーブル</span><span class="order-card-time">'+timeAgo(o.createdAt)+'</span></div>' +
+            '<div class="order-items-list">'+itemsTxt+'</div>' +
+            (o.note ? '<div class="order-note">備考：'+esc(o.note)+'</div>' : '') +
+            '<div class="order-total tabular">'+yen(o.total)+'</div>' +
+            btn +
+          '</div>'
+        );
+      }).join('');
+      return (
+        '<div class="kan-col">' +
+          '<div class="kan-col-head"><span class="title"><span class="dot" style="background:'+st.dot+'"></span>'+st.label+'</span><span class="kan-count">'+orders.length+'</span></div>' +
+          (cards || '<div class="kan-empty">注文はありません</div>') +
+        '</div>'
+      );
+    }).join('');
+
+    return stat + '<div class="kanban">' + cols + '</div>';
+  }
+
+  function timeAgo(ts){
+    var mins = Math.max(0, Math.round((Date.now()-ts)/60000));
+    return mins < 1 ? "たった今" : mins + "分前";
+  }
+
+  function renderAdminMenu(){
+    var cats = CATEGORIES.filter(function(c){ return state.menu.some(function(m){return m.category===c.id;}); });
+    var sections = cats.map(function(c){
+      var items = state.menu.filter(function(m){ return m.category===c.id; });
+      var rows = items.map(function(item){
+        if(state.editingId === item.id){
+          return renderEditForm(item);
+        }
+        return (
+          '<div class="menu-row">' +
+            '<div class="em">'+item.emoji+'</div>' +
+            '<div class="info"><div class="nm">'+esc(item.name)+'</div><div class="ds">'+esc(item.sub)+(item.desc?' ・ '+esc(item.desc):'')+'</div></div>' +
+            '<div class="pr tabular">'+yen(item.price)+'</div>' +
+            '<button class="avail-toggle'+(item.available?'':' off')+'" data-action="toggle-avail" data-id="'+item.id+'">'+(item.available?'販売中':'売り切れ')+'</button>' +
+            '<div class="row-actions">' +
+              '<button class="icon-btn" data-action="edit-item" data-id="'+item.id+'" aria-label="編集">✎</button>' +
+              '<button class="icon-btn" data-action="delete-item" data-id="'+item.id+'" aria-label="削除">🗑</button>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+      return '<div class="menu-admin-cat"><h3>'+esc(c.jp)+' <span class="it-display" style="color:var(--ink-soft);font-size:.85rem;">'+esc(c.it)+'</span></h3><div class="menu-table">'+rows+'</div></div>';
+    }).join('');
+
+    return sections + renderAddPanel();
+  }
+
+  function renderEditForm(item){
+    return (
+      '<div class="edit-form">' +
+        '<div><label>商品名</label><input type="text" data-field="name" value="'+esc(item.name)+'"></div>' +
+        '<div><label>イタリア語名</label><input type="text" data-field="sub" value="'+esc(item.sub)+'"></div>' +
+        '<div class="full"><label>説明</label><input type="text" data-field="desc" value="'+esc(item.desc)+'"></div>' +
+        '<div><label>価格（円）</label><input type="number" data-field="price" value="'+item.price+'"></div>' +
+        '<div><label>絵文字</label><input type="text" data-field="emoji" value="'+esc(item.emoji)+'"></div>' +
+        '<div class="actions">' +
+          '<button class="save" data-action="save-edit" data-id="'+item.id+'">保存</button>' +
+          '<button data-action="cancel-edit">キャンセル</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderAddPanel(){
+    return (
+      '<div class="add-panel">' +
+        '<h3>＋ 新しいメニューを追加</h3>' +
+        '<div class="edit-form" style="padding:0;background:none;border:none;">' +
+          '<div><label>カテゴリー</label><select data-field="new-category">' +
+            CATEGORIES.map(function(c){ return '<option value="'+c.id+'">'+esc(c.jp)+'</option>'; }).join('') +
+          '</select></div>' +
+          '<div><label>絵文字</label><input type="text" id="new-emoji" placeholder="🍝" maxlength="4"></div>' +
+          '<div><label>商品名</label><input type="text" id="new-name" placeholder="例：ラザニア"></div>' +
+          '<div><label>イタリア語名</label><input type="text" id="new-sub" placeholder="例：Lasagna"></div>' +
+          '<div class="full"><label>説明</label><input type="text" id="new-desc" placeholder="一言メニュー説明"></div>' +
+          '<div><label>価格（円）</label><input type="number" id="new-price" placeholder="1480"></div>' +
+          '<div class="actions"><button class="save" data-action="add-item" style="flex:none;padding:9px 20px;">メニューに追加</button></div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  // Same character set as the printed tokens: uppercase letters and digits,
+  // minus visually ambiguous ones (0/O, 1/I).
+  var TOKEN_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  function randomToken(){
+    var bytes = new Uint8Array(6);
+    if(window.crypto && window.crypto.getRandomValues){
+      window.crypto.getRandomValues(bytes);
+    } else {
+      for(var i=0;i<6;i++){ bytes[i] = Math.floor(Math.random()*256); }
+    }
+    var out = "";
+    for(var j=0;j<6;j++){ out += TOKEN_CHARS[bytes[j] % TOKEN_CHARS.length]; }
+    return out;
+  }
+
+  function regenerateTokens(){
+    var used = {};
+    var next = state.tableTokens.map(function(t){
+      var tok;
+      do { tok = randomToken(); } while(used[tok]);
+      used[tok] = true;
+      return {number:t.number, token:tok};
+    });
+    state.tableTokens = next;
+    state.tableTokensRotatedAt = Date.now();
+    persistFields({tableTokens: next, tableTokensRotatedAt: state.tableTokensRotatedAt});
+  }
+
+  function advanceOrder(id){
+    var fresh = readFreshOrders();
+    var order = fresh.find(function(o){ return String(o.id)===String(id); });
+    if(!order) return;
+    var idx = STATUS_ORDER.indexOf(order.status);
+    if(idx < STATUS_ORDER.length-1){ order.status = STATUS_ORDER[idx+1]; }
+    state.orders = fresh;
+    persistFields({orders: fresh});
+  }
+
+  function saveEdit(id, form){
+    var item = findItem(id);
+    if(!item || !form) return;
+    form.querySelectorAll("[data-field]").forEach(function(inp){
+      var field = inp.getAttribute("data-field");
+      if(field==="price"){ item.price = Math.max(0, parseInt(inp.value,10) || 0); }
+      else { item[field] = inp.value; }
+    });
+    state.editingId = null;
+  }
+
+  function addNewItem(){
+    var name = document.getElementById("new-name").value.trim();
+    var price = parseInt(document.getElementById("new-price").value, 10);
+    if(!name || !price){ return; }
+    var category = document.querySelector('[data-field="new-category"]').value;
+    var sub = document.getElementById("new-sub").value.trim();
+    var desc = document.getElementById("new-desc").value.trim();
+    var emoji = document.getElementById("new-emoji").value.trim() || "🍽";
+    var id = "item-" + Date.now();
+    state.menu.push({id:id, category:category, name:name, sub:sub, desc:desc, price:price, emoji:emoji, available:true});
+  }
+
+  function handleClick(e){
+    var el = e.target.closest("[data-action]");
+    if(!el) return;
+    var action = el.getAttribute("data-action");
+    var id = el.getAttribute("data-id");
+
+    switch(action){
+      case "admin-tab": state.adminTab=id; break;
+      case "advance-order": advanceOrder(id); break;
+      case "toggle-avail": {
+        var it = findItem(id);
+        if(it) it.available = !it.available;
+        break;
+      }
+      case "edit-item": state.editingId = id; break;
+      case "cancel-edit": state.editingId = null; break;
+      case "save-edit": saveEdit(id, el.closest(".edit-form")); break;
+      case "delete-item":
+        state.menu = state.menu.filter(function(m){return m.id!==id;});
+        break;
+      case "add-item": addNewItem(); break;
+      case "regen-tokens":
+        if(window.confirm("テーブルのQRトークンを再発行します。この端末上ではすぐに新しいQRコードに切り替わりますが、店舗に印刷済みのQRコードを無効化するには別途サイトの再公開が必要です。続けますか？")){
+          regenerateTokens();
+        }
+        break;
+      case "logout":
+        clearSession();
+        state.authed = false;
+        state.loginError = null;
+        break;
+      case "staff-pick-table":
+        state.staffOrder.tableNumber = parseInt(id, 10);
+        state.staffOrder.screen = "menu";
+        break;
+      case "staff-change-table":
+        state.staffOrder.tableNumber = null;
+        state.staffOrder.cart = [];
+        state.staffOrder.note = "";
+        state.staffOrder.screen = "menu";
+        break;
+      case "staff-set-cat":
+        state.staffOrder.activeCategory = id;
+        break;
+      case "staff-inc": {
+        var sit = findItem(id);
+        if(!sit || !sit.available) return;
+        staffSetCartQty(id, staffCartQty(id)+1);
+        break;
+      }
+      case "staff-dec":
+        staffSetCartQty(id, staffCartQty(id)-1);
+        break;
+      case "staff-remove":
+        staffSetCartQty(id, 0);
+        break;
+      case "staff-open-cart":
+        state.staffOrder.screen = "cart";
+        break;
+      case "staff-back-to-menu":
+        state.staffOrder.screen = "menu";
+        break;
+      case "staff-confirm-order":
+        staffConfirmOrder();
+        break;
+      default: return;
+    }
+    render();
+  }
+
+  function handleSubmit(e){
+    var form = e.target;
+
+    if(form.id === "login-form"){
+      e.preventDefault();
+      var pwInput = document.getElementById("login-password");
+      var pw = pwInput ? pwInput.value : "";
+      if(sha256Hex(pw) === state.adminPasswordHash){
+        state.authed = true;
+        state.loginError = null;
+        startSession();
+      } else {
+        state.loginError = "パスワードが違います。もう一度お試しください。";
+      }
+      render();
+      return;
+    }
+
+    if(form.id === "change-password-form"){
+      e.preventDefault();
+      var cur = document.getElementById("current-password").value;
+      var next = document.getElementById("new-password").value;
+      var confirmPw = document.getElementById("new-password-confirm").value;
+
+      if(!next || next.length < 4){
+        state.settingsMsg = "新しいパスワードは4文字以上で入力してください。";
+        state.settingsMsgOk = false;
+        render();
+        return;
+      }
+      if(next !== confirmPw){
+        state.settingsMsg = "新しいパスワード（確認）が一致しません。";
+        state.settingsMsgOk = false;
+        render();
+        return;
+      }
+      if(sha256Hex(cur) !== state.adminPasswordHash){
+        state.settingsMsg = "現在のパスワードが違います。";
+        state.settingsMsgOk = false;
+        render();
+        return;
+      }
+      var newHash = sha256Hex(next);
+      state.adminPasswordHash = newHash;
+      persistFields({adminPasswordHash: newHash});
+      state.settingsMsg = "パスワードを変更しました。次回ログインから新しいパスワードをお使いください。";
+      state.settingsMsgOk = true;
+      render();
+    }
+  }
+
+  function handleInput(e){
+    var el = e.target;
+    if(el.matches('[data-action="staff-note"]')){
+      state.staffOrder.note = el.value;
+    }
+  }
+
+  document.getElementById("page").addEventListener("click", handleClick);
+  document.getElementById("page").addEventListener("submit", handleSubmit);
+  document.getElementById("page").addEventListener("input", handleInput);
+
+  render();
+
+  // Keep the orders board (and the count/revenue tiles) current as new
+  // orders arrive from the separate customer page.
+  setInterval(function(){
+    if(state.authed && state.adminTab === "orders"){
+      state.orders = readFreshOrders();
+      render();
+    }
+  }, 3000);
+})();
+</script>
+</body>
+</html>
+
