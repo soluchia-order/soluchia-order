@@ -1293,3 +1293,294 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       maybeSyncOrdersToSheet(state.orders);
     }
   }
+  // --- 「かんたんコピー用データ」（スプレッドシート連携なしの簡易エクスポート）---
+  // 提供完了（売上に計上される）注文だけを対象に、商品ごとに1行のタブ区切り
+  // テキストを組み立てる。取り消し済みの注文や、まだ提供前の注文は含めない。
+  function buildSalesCopyRows(){
+    var rows = [];
+    state.orders.forEach(function(o){
+      if(o.status !== "done") return;
+      var dt = o.editedAt || o.createdAt;
+      var dtTxt = dt ? new Date(dt).toLocaleString("ja-JP") : "";
+      (o.items||[]).forEach(function(it){
+        rows.push([
+          dtTxt,
+          (o.tableNumber===null || o.tableNumber===undefined) ? "-" : String(o.tableNumber),
+          it.name,
+          it.qty,
+          it.price,
+          it.price*it.qty
+        ]);
+      });
+    });
+    return rows;
+  }
+  function buildSalesCopyText(){
+    var header = ["日時","テーブル番号","商品名","数量","単価","小計"];
+    var rows = buildSalesCopyRows();
+    return [header].concat(rows).map(function(r){ return r.join("\t"); }).join("\n");
+  }
+
+  function saveEdit(id, form){
+    var item = findItem(id);
+    if(!item || !form) return;
+    form.querySelectorAll("[data-field]").forEach(function(inp){
+      var field = inp.getAttribute("data-field");
+      if(field==="price"){ item.price = Math.max(0, parseInt(inp.value,10) || 0); }
+      else { item[field] = inp.value; }
+    });
+    state.editingId = null;
+  }
+
+  function addNewItem(){
+    var name = document.getElementById("new-name").value.trim();
+    var price = parseInt(document.getElementById("new-price").value, 10);
+    if(!name || !price){ return; }
+    var category = document.querySelector('[data-field="new-category"]').value;
+    var sub = document.getElementById("new-sub").value.trim();
+    var desc = document.getElementById("new-desc").value.trim();
+    var emoji = document.getElementById("new-emoji").value.trim() || "🍽";
+    var id = "item-" + Date.now();
+    state.menu.push({id:id, category:category, name:name, sub:sub, desc:desc, price:price, emoji:emoji, available:true});
+  }
+
+  function handleClick(e){
+    var el = e.target.closest("[data-action]");
+    if(!el) return;
+    var action = el.getAttribute("data-action");
+    var id = el.getAttribute("data-id");
+
+    switch(action){
+      case "admin-tab": {
+        state.adminTab = id;
+        if(id === "settings"){
+          state.orders = readFreshOrders();
+          state.copyDataMsg = null;
+        }
+        break;
+      }
+      case "advance-order": advanceOrder(id); break;
+      case "cancel-order": cancelOrder(id); break;
+      case "restore-order": restoreOrder(id); break;
+      case "edit-order": startEditOrder(id); break;
+      case "cancel-order-edit": cancelEditOrder(); break;
+      case "save-order-edit": saveOrderEdit(id); break;
+      case "order-item-inc": {
+        var incIdx = parseInt(id,10);
+        var incRow = state.editOrderDraft && state.editOrderDraft.items[incIdx];
+        if(incRow) orderDraftSetQty(incIdx, incRow.qty+1);
+        break;
+      }
+      case "order-item-dec": {
+        var decIdx = parseInt(id,10);
+        var decRow = state.editOrderDraft && state.editOrderDraft.items[decIdx];
+        if(decRow) orderDraftSetQty(decIdx, decRow.qty-1);
+        break;
+      }
+      case "order-item-remove": orderDraftSetQty(parseInt(id,10), 0); break;
+      case "order-add-item": {
+        var addSel = el.closest(".order-card").querySelector('[data-field="order-add-item-select"]');
+        if(addSel && addSel.value) orderDraftAddItem(addSel.value);
+        break;
+      }
+      case "reset-all-orders": resetAllOrders(); break;
+      case "copy-sales-data": {
+        var ta = document.getElementById("sales-copy-textarea");
+        var txt = ta ? ta.value : buildSalesCopyText();
+        var done = function(){
+          state.copyDataMsg = "コピーしました。スプレッドシートやエクセルに貼り付けてください。";
+          render();
+        };
+        var fail = function(){
+          if(ta){ ta.focus(); ta.select(); }
+          state.copyDataMsg = "自動コピーに失敗しました。テキストを選択済みなので、そのままコピー（Ctrl/Cmd+C）してください。";
+          render();
+        };
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(txt).then(done).catch(function(){
+            try{
+              if(ta){ ta.focus(); ta.select(); document.execCommand("copy"); done(); }
+              else { fail(); }
+            }catch(e){ fail(); }
+          });
+        } else {
+          try{
+            if(ta){ ta.focus(); ta.select(); document.execCommand("copy"); done(); }
+            else { fail(); }
+          }catch(e){ fail(); }
+        }
+        break;
+      }
+      case "refresh-sales-data": {
+        state.orders = readFreshOrders();
+        state.copyDataMsg = "最新のデータに更新しました。";
+        break;
+      }
+      case "sheet-sync-test": {
+        var testCfg = state.sheetSync;
+        if(!testCfg || !testCfg.url){
+          state.sheetSyncStatus = "error";
+          state.sheetSyncLastMsg = "先にウェブアプリのURLを入力して保存してください。";
+          break;
+        }
+        pushOrdersToSheet([], {test:true});
+        break;
+      }
+      case "sheet-sync-now": {
+        var nowCfg = state.sheetSync;
+        if(!nowCfg || !nowCfg.url){
+          state.sheetSyncStatus = "error";
+          state.sheetSyncLastMsg = "先にウェブアプリのURLを入力して保存してください。";
+          break;
+        }
+        pushOrdersToSheet(state.orders, {});
+        break;
+      }
+      case "toggle-avail": {
+        var it = findItem(id);
+        if(it) it.available = !it.available;
+        break;
+      }
+      case "edit-item": state.editingId = id; break;
+      case "cancel-edit": state.editingId = null; break;
+      case "save-edit": saveEdit(id, el.closest(".edit-form")); break;
+      case "delete-item":
+        state.menu = state.menu.filter(function(m){return m.id!==id;});
+        break;
+      case "add-item": addNewItem(); break;
+      case "regen-tokens":
+        if(window.confirm("テーブルのQRトークンを再発行します。この端末上ではすぐに新しいQRコードに切り替わりますが、店舗に印刷済みのQRコードを無効化するには別途サイトの再公開が必要です。続けますか？")){
+          regenerateTokens();
+        }
+        break;
+      case "logout":
+        clearSession();
+        state.authed = false;
+        state.loginError = null;
+        break;
+      case "staff-pick-table":
+        state.staffOrder.tableNumber = parseInt(id, 10);
+        state.staffOrder.screen = "menu";
+        break;
+      case "staff-change-table":
+        state.staffOrder.tableNumber = null;
+        state.staffOrder.cart = [];
+        state.staffOrder.note = "";
+        state.staffOrder.screen = "menu";
+        break;
+      case "staff-set-cat":
+        state.staffOrder.activeCategory = id;
+        break;
+      case "staff-inc": {
+        var sit = findItem(id);
+        if(!sit || !sit.available) return;
+        staffSetCartQty(id, staffCartQty(id)+1);
+        break;
+      }
+      case "staff-dec":
+        staffSetCartQty(id, staffCartQty(id)-1);
+        break;
+      case "staff-remove":
+        staffSetCartQty(id, 0);
+        break;
+      case "staff-open-cart":
+        state.staffOrder.screen = "cart";
+        break;
+      case "staff-back-to-menu":
+        state.staffOrder.screen = "menu";
+        break;
+      case "staff-confirm-order":
+        staffConfirmOrder();
+        break;
+      default: return;
+    }
+    render();
+  }
+
+  function handleSubmit(e){
+    var form = e.target;
+
+    if(form.id === "login-form"){
+      e.preventDefault();
+      var pwInput = document.getElementById("login-password");
+      var pw = pwInput ? pwInput.value : "";
+      if(sha256Hex(pw) === state.adminPasswordHash){
+        state.authed = true;
+        state.loginError = null;
+        startSession();
+      } else {
+        state.loginError = "パスワードが違います。もう一度お試しください。";
+      }
+      render();
+      return;
+    }
+
+    if(form.id === "change-password-form"){
+      e.preventDefault();
+      var cur = document.getElementById("current-password").value;
+      var next = document.getElementById("new-password").value;
+      var confirmPw = document.getElementById("new-password-confirm").value;
+
+      if(!next || next.length < 4){
+        state.settingsMsg = "新しいパスワードは4文字以上で入力してください。";
+        state.settingsMsgOk = false;
+        render();
+        return;
+      }
+      if(next !== confirmPw){
+        state.settingsMsg = "新しいパスワード（確認）が一致しません。";
+        state.settingsMsgOk = false;
+        render();
+        return;
+      }
+      if(sha256Hex(cur) !== state.adminPasswordHash){
+        state.settingsMsg = "現在のパスワードが違います。";
+        state.settingsMsgOk = false;
+        render();
+        return;
+      }
+      var newHash = sha256Hex(next);
+      state.adminPasswordHash = newHash;
+      persistFields({adminPasswordHash: newHash});
+      state.settingsMsg = "パスワードを変更しました。次回ログインから新しいパスワードをお使いください。";
+      state.settingsMsgOk = true;
+      render();
+      return;
+    }
+
+    if(form.id === "sheet-sync-form"){
+      e.preventDefault();
+      saveSheetSyncSettings();
+      render();
+    }
+  }
+
+  function handleInput(e){
+    var el = e.target;
+    if(el.matches('[data-action="staff-note"]')){
+      state.staffOrder.note = el.value;
+    }
+    if(el.matches('[data-action="order-edit-note"]') && state.editOrderDraft){
+      state.editOrderDraft.note = el.value;
+    }
+  }
+
+  document.getElementById("page").addEventListener("click", handleClick);
+  document.getElementById("page").addEventListener("submit", handleSubmit);
+  document.getElementById("page").addEventListener("input", handleInput);
+
+  render();
+
+  // Keep the orders board (and the count/revenue tiles) current as new
+  // orders arrive from the separate customer page.
+  setInterval(function(){
+    if(state.authed && !state.editOrderId){
+      state.orders = readFreshOrders();
+      maybeSyncOrdersToSheet(state.orders);
+      if(state.adminTab === "orders"){ render(); }
+    }
+  }, 3000);
+})();
+</script>
+</body>
+</html>
