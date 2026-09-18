@@ -100,6 +100,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media (prefers-reduced-motion: reduce){
   *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
 }
+
 #page{min-height:100vh;padding:var(--sp-6) var(--sp-4) var(--sp-7);position:relative;}
 
 .admin{max-width:1180px;margin:0 auto;}
@@ -173,7 +174,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);
 }
 .menu-row:last-child{border-bottom:none;}
-.menu-row .em{grid-area:em;font-size:1.3rem;}
+.menu-row .em{grid-area:em;font-size:1.3rem;width:44px;height:44px;border-radius:var(--r-md);overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center;}
+.menu-row .em img,.staff-item-row .em img{width:100%;height:100%;object-fit:cover;display:block;}
 .menu-row .info{grid-area:info;min-width:0;}
 .menu-row .nm{font-weight:700;font-size:.85rem;}
 .menu-row .ds{font-size:.72rem;color:var(--ink-soft);margin-top:2px;}
@@ -205,11 +207,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 .qr-intro{font-size:.85rem;color:var(--ink-soft);line-height:1.7;max-width:60ch;margin-bottom:var(--sp-5);}
 .qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--sp-4);}
-.qr-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-4);text-align:center;box-shadow:var(--shadow-card);}
+.qr-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-4);text-align:center;box-shadow:var(--shadow-card);cursor:pointer;}
+.qr-card:hover{border-color:var(--accent);}
 .qr-card-label{font-weight:700;font-size:.85rem;margin-bottom:10px;}
 .qr-canvas-wrap{background:#fff;border-radius:var(--r-sm);padding:10px;display:inline-flex;align-items:center;justify-content:center;min-height:120px;min-width:120px;}
+.qr-card-hint{font-size:.68rem;color:var(--ink-soft);margin-top:8px;}
 .qr-url{font-size:.66rem;color:var(--ink-soft);margin-top:10px;word-break:break-all;line-height:1.5;}
 .qr-section-title{font-family:"Shippori Mincho B1",serif;font-size:1.05rem;margin-bottom:var(--sp-3);}
+
+.qr-modal-backdrop{position:fixed;inset:0;background:rgba(20,15,10,.72);display:flex;align-items:center;justify-content:center;z-index:200;padding:var(--sp-4);}
+.qr-modal-card{background:#fff;border-radius:var(--r-lg);padding:var(--sp-6) var(--sp-5);max-width:360px;width:100%;text-align:center;box-shadow:var(--shadow-pop);position:relative;}
+.qr-modal-close{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);}
+.qr-modal-label{font-family:"Shippori Mincho B1",serif;font-size:1.4rem;margin-bottom:var(--sp-4);color:var(--ink);}
+.qr-modal-canvas-wrap{background:#fff;border-radius:var(--r-md);padding:16px;display:inline-flex;align-items:center;justify-content:center;min-height:260px;min-width:260px;border:1px solid var(--line);}
+.qr-modal-hint{font-size:.8rem;color:var(--ink-soft);margin-top:var(--sp-4);line-height:1.6;}
 
 .login-gate{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:var(--sp-4);}
 .login-card{
@@ -235,6 +246,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .danger-zone h3{font-size:.95rem;margin-bottom:6px;color:var(--alert);}
 .danger-zone p{font-size:.78rem;color:var(--ink-soft);line-height:1.6;margin-bottom:10px;}
 .danger-zone .mini-btn{background:var(--alert);}
+
 .staff-order{max-width:640px;margin:0 auto;}
 .staff-table-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:420px;}
 .staff-table-btn{aspect-ratio:1;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-md);font-size:1.3rem;font-weight:700;cursor:pointer;color:var(--ink);}
@@ -250,7 +262,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 .staff-item-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center;}
 .staff-item-row:last-child{border-bottom:none;}
-.staff-item-row .em{font-size:1.4rem;flex:none;width:44px;height:44px;border-radius:var(--r-md);background:var(--bg);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);}
+.staff-item-row .em{font-size:1.4rem;flex:none;width:44px;height:44px;border-radius:var(--r-md);background:var(--bg);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);overflow:hidden;}
 .staff-item-row .info{flex:1;min-width:0;}
 .staff-item-row .nm{font-weight:700;font-size:.88rem;}
 .staff-item-row .pr{font-size:.78rem;color:var(--ink-soft);}
@@ -333,6 +345,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     {number:7, token:"AUHB9F"}, {number:8, token:"Y3XKQG"}, {number:9, token:"LWR468"},
     {number:10, token:"3F6K59"}, {number:11, token:"GCHB26"}, {number:12, token:"2J4A75"}
   ];
+
   // --- Admin login gate -----------------------------------------------
   // This is a static, backend-less page, so this is a deterrent (keeps
   // casual QR scans and curious customers out) rather than real access
@@ -444,6 +457,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     {id:"dolci", jp:"ドルチェ", it:"Dolci"},
     {id:"bevande", jp:"ドリンク", it:"Bevande"}
   ];
+
   var DEFAULT_MENU = [
     {id:"caprese", category:"antipasti", name:"カプレーゼ", sub:"Caprese", desc:"モッツァレラと完熟トマト、バジル、EXVオリーブオイル", price:980, emoji:"🍅", available:true},
     {id:"prosciutto", category:"antipasti", name:"自家製生ハム 3種盛り", sub:"Prosciutto misto", desc:"熟成生ハムの食べ比べ", price:1280, emoji:"🥓", available:true},
@@ -550,6 +564,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   state.sheetSyncLastAt = null;
   // 「かんたんコピー用データ」のクリップボードコピー結果メッセージ（画面表示のみ・保存はしない）。
   state.copyDataMsg = null;
+  // テーブルQRの拡大表示（全画面モーダル）。開いているテーブル番号。画面表示のみ・保存はしない。
+  state.enlargedQrTable = null;
+
   function persistFields(fields){
     try{
       var raw = localStorage.getItem(STORAGE_KEY);
@@ -579,6 +596,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
   function findItem(id){ return state.menu.find(function(m){return m.id===id;}); }
 
+  // メニュー写真を後から添付できるようにするための準備。item.image が未設定の
+  // 間は、この共通プレースホルダー画像（お皿とカトラリーのシンプルな線画）を
+  // 表示する。管理画面の「画像URL」欄にURLを入れると、そちらに差し替わる。
+  var DEFAULT_ITEM_IMAGE = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#F3E5D0"/><circle cx="200" cy="150" r="82" fill="#FFFFFF" stroke="#E4DAC4" stroke-width="4"/><g fill="none" stroke="#C77D2E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><line x1="152" y1="108" x2="152" y2="150"/><line x1="141" y1="108" x2="141" y2="134"/><line x1="163" y1="108" x2="163" y2="134"/><line x1="152" y1="150" x2="152" y2="196"/><path d="M252 108 v42 a11 11 0 0 1 -11 11 h0 v33"/></g></svg>');
+  function itemImage(item){ return (item && item.image) ? item.image : DEFAULT_ITEM_IMAGE; }
+
   function render(){
     if(!state.authed){
       document.getElementById("page").innerHTML = renderLoginGate();
@@ -589,6 +612,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     document.getElementById("page").innerHTML = renderAdmin();
     persistFields({menu: state.menu});
     if(state.adminTab === "qr"){ populateQRCodes(); }
+    if(state.enlargedQrTable){ populateEnlargedQR(); }
   }
 
   function renderLoginGate(){
@@ -622,6 +646,35 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     });
   }
 
+  // テーブルQRの拡大モーダル用に、選択中のテーブル1件分だけを大きく描画する。
+  function populateEnlargedQR(){
+    var t = state.tableTokens.find(function(tt){ return tt.number === state.enlargedQrTable; });
+    var el = document.getElementById("qr-modal-canvas");
+    if(!t || !el) return;
+    el.innerHTML = "";
+    if(typeof QRCode === "undefined"){
+      el.innerHTML = '<span style="font-size:.72rem;color:var(--alert);">QR生成ライブラリを読み込めませんでした</span>';
+      return;
+    }
+    new QRCode(el, {text: customerBaseUrl()+"?t="+t.token, width:240, height:240, colorDark:"#221D19", colorLight:"#ffffff"});
+  }
+
+  function renderQrModal(){
+    if(!state.enlargedQrTable) return '';
+    var t = state.tableTokens.find(function(tt){ return tt.number === state.enlargedQrTable; });
+    if(!t) return '';
+    return (
+      '<div class="qr-modal-backdrop">' +
+        '<div class="qr-modal-card">' +
+          '<button class="qr-modal-close" data-action="close-qr-modal" aria-label="閉じる">✕</button>' +
+          '<div class="qr-modal-label">'+t.number+'番テーブル</div>' +
+          '<div class="qr-modal-canvas-wrap" id="qr-modal-canvas"></div>' +
+          '<div class="qr-modal-hint">このままお客様にお見せください。<br>他のテーブルの情報は表示されません。</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
   function renderAdmin(){
     var body = state.adminTab === "menu" ? renderAdminMenu()
       : state.adminTab === "qr" ? renderAdminQR()
@@ -647,9 +700,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
           '</div>' +
           '<div>' + body + '</div>' +
         '</div>' +
-      '</div>'
+      '</div>' +
+      renderQrModal()
     );
   }
+
   function renderAdminSettings(){
     var liveCount = state.orders.length;
     var sync = state.sheetSync || {url:"", secret:"", enabled:false};
@@ -716,9 +771,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   function renderAdminQR(){
     var tableCards = state.tableTokens.map(function(t){
       return (
-        '<div class="qr-card">' +
+        '<div class="qr-card" data-action="enlarge-qr" data-id="'+t.number+'" role="button" tabindex="0">' +
           '<div class="qr-card-label">'+t.number+'番テーブル</div>' +
           '<div class="qr-canvas-wrap" id="qr-table-'+t.number+'"></div>' +
+          '<div class="qr-card-hint">🔍 タップして拡大表示</div>' +
         '</div>'
       );
     }).join('');
@@ -726,7 +782,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       ? ("最終更新：" + new Date(state.tableTokensRotatedAt).toLocaleString("ja-JP"))
       : "最終更新：初期設定のまま(未更新)";
     return (
-      '<p class="qr-intro">各テーブルにこのQRコードを設置してください。お客様がスマホで読み取ると、そのテーブル専用のリンクからメニューが開きます。テーブル番号を手入力したり、他のテーブルの番号に書き換えたりしてもご注文いただけない仕組みです。</p>' +
+      '<p class="qr-intro">各テーブルにこのQRコードを設置してください。お客様がスマホで読み取ると、そのテーブル専用のリンクからメニューが開きます。テーブル番号を手入力したり、他のテーブルの番号に書き換えたりしてもご注文いただけない仕組みです。カードをタップすると、そのテーブルのQRコードだけを拡大表示できます（お客様に直接お見せする時に便利です）。</p>' +
       '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:var(--sp-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;">' +
         '<div style="font-size:.78rem;color:var(--ink-soft);">'+esc(rotatedTxt)+'</div>' +
         '<button class="mini-btn" style="width:auto;padding:9px 16px;" data-action="regen-tokens">🔄 トークンを再発行する</button>' +
@@ -739,6 +795,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       '</div>'
     );
   }
+
   // --- Staff order entry ("スタッフ注文") ---------------------------------
   // A quick, calculator-style order form for staff: pick a table, tap
   // through the menu to build a cart, confirm — and it lands in the same
@@ -833,7 +890,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       }
       return (
         '<div class="staff-item-row">' +
-          '<div class="em">'+item.emoji+'</div>' +
+          '<div class="em"><img src="'+esc(itemImage(item))+'" alt=""></div>' +
           '<div class="info"><div class="nm">'+esc(item.name)+'</div><div class="pr tabular">'+yen(item.price)+'</div></div>' +
           controls +
         '</div>'
@@ -858,6 +915,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       '</div>'
     );
   }
+
   function renderStaffCart(){
     var so = state.staffOrder;
     if(so.cart.length===0){
@@ -873,7 +931,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       if(!it) return '';
       return (
         '<div class="staff-cart-row">' +
-          '<div class="em" style="width:40px;height:40px;font-size:1.2rem;flex:none;border-radius:var(--r-md);background:var(--bg);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);">'+it.emoji+'</div>' +
+          '<div class="em" style="width:40px;height:40px;font-size:1.2rem;flex:none;border-radius:var(--r-md);background:var(--bg);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);overflow:hidden;"><img src="'+esc(itemImage(it))+'" alt="" style="width:100%;height:100%;object-fit:cover;"></div>' +
           '<div class="info" style="flex:1;min-width:0;">' +
             '<div class="nm" style="font-weight:700;font-size:.88rem;">'+esc(it.name)+'</div>' +
             '<div class="pr tabular" style="font-size:.78rem;color:var(--ink-soft);">'+yen(it.price)+' × '+c.qty+' = '+yen(it.price*c.qty)+'</div>' +
@@ -1002,6 +1060,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     var mins = Math.max(0, Math.round((Date.now()-ts)/60000));
     return mins < 1 ? "たった今" : mins + "分前";
   }
+
   function renderAdminMenu(){
     var cats = CATEGORIES.filter(function(c){ return state.menu.some(function(m){return m.category===c.id;}); });
     var sections = cats.map(function(c){
@@ -1012,7 +1071,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         }
         return (
           '<div class="menu-row">' +
-            '<div class="em">'+item.emoji+'</div>' +
+            '<div class="em"><img src="'+esc(itemImage(item))+'" alt=""></div>' +
             '<div class="info"><div class="nm">'+esc(item.name)+'</div><div class="ds">'+esc(item.sub)+(item.desc?' ・ '+esc(item.desc):'')+'</div></div>' +
             '<div class="pr tabular">'+yen(item.price)+'</div>' +
             '<button class="avail-toggle'+(item.available?'':' off')+'" data-action="toggle-avail" data-id="'+item.id+'">'+(item.available?'販売中':'売り切れ')+'</button>' +
@@ -1037,6 +1096,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         '<div class="full"><label>説明</label><input type="text" data-field="desc" value="'+esc(item.desc)+'"></div>' +
         '<div><label>価格（円）</label><input type="number" data-field="price" value="'+item.price+'"></div>' +
         '<div><label>絵文字</label><input type="text" data-field="emoji" value="'+esc(item.emoji)+'"></div>' +
+        '<div class="full"><label>画像URL（空欄なら準備中の画像を表示）</label><input type="text" data-field="image" placeholder="https://..." value="'+esc(item.image||"")+'"></div>' +
+        '<div class="full" style="display:flex;align-items:center;gap:10px;">' +
+          '<img src="'+esc(itemImage(item))+'" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:var(--r-md);border:1px solid var(--line);">' +
+          '<span style="font-size:.7rem;color:var(--ink-soft);">現在の画像プレビュー</span>' +
+        '</div>' +
         '<div class="actions">' +
           '<button class="save" data-action="save-edit" data-id="'+item.id+'">保存</button>' +
           '<button data-action="cancel-edit">キャンセル</button>' +
@@ -1058,6 +1122,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
           '<div><label>イタリア語名</label><input type="text" id="new-sub" placeholder="例：Lasagna"></div>' +
           '<div class="full"><label>説明</label><input type="text" id="new-desc" placeholder="一言メニュー説明"></div>' +
           '<div><label>価格（円）</label><input type="number" id="new-price" placeholder="1480"></div>' +
+          '<div class="full"><label>画像URL（空欄なら準備中の画像を表示）</label><input type="text" id="new-image" placeholder="https://..."></div>' +
           '<div class="actions"><button class="save" data-action="add-item" style="flex:none;padding:9px 20px;">メニューに追加</button></div>' +
         '</div>' +
       '</div>'
@@ -1091,6 +1156,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     state.tableTokensRotatedAt = Date.now();
     persistFields({tableTokens: next, tableTokensRotatedAt: state.tableTokensRotatedAt});
   }
+
   function advanceOrder(id){
     var fresh = readFreshOrders();
     var order = fresh.find(function(o){ return String(o.id)===String(id); });
@@ -1291,6 +1357,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       maybeSyncOrdersToSheet(state.orders);
     }
   }
+
   // --- 「かんたんコピー用データ」（スプレッドシート連携なしの簡易エクスポート）---
   // 提供完了（売上に計上される）注文だけを対象に、商品ごとに1行のタブ区切り
   // テキストを組み立てる。取り消し済みの注文や、まだ提供前の注文は含めない。
@@ -1338,9 +1405,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     var sub = document.getElementById("new-sub").value.trim();
     var desc = document.getElementById("new-desc").value.trim();
     var emoji = document.getElementById("new-emoji").value.trim() || "🍽";
+    var image = document.getElementById("new-image").value.trim();
     var id = "item-" + Date.now();
-    state.menu.push({id:id, category:category, name:name, sub:sub, desc:desc, price:price, emoji:emoji, available:true});
+    state.menu.push({id:id, category:category, name:name, sub:sub, desc:desc, price:price, emoji:emoji, image:image, available:true});
   }
+
   function handleClick(e){
     var el = e.target.closest("[data-action]");
     if(!el) return;
@@ -1445,6 +1514,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         state.menu = state.menu.filter(function(m){return m.id!==id;});
         break;
       case "add-item": addNewItem(); break;
+      case "enlarge-qr": state.enlargedQrTable = parseInt(id,10); break;
+      case "close-qr-modal": state.enlargedQrTable = null; break;
       case "regen-tokens":
         if(window.confirm("テーブルのQRトークンを再発行します。この端末上ではすぐに新しいQRコードに切り替わりますが、店舗に印刷済みのQRコードを無効化するには別途サイトの再公開が必要です。続けますか？")){
           regenerateTokens();
