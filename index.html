@@ -143,24 +143,29 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .cat-heading .it{font-size:.85rem;color:var(--ink-soft);}
 
 .item-card{
-  display:flex;gap:12px;padding:var(--sp-3) 0;border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-lg);overflow:hidden;margin-bottom:var(--sp-4);box-shadow:var(--shadow-card);
 }
-.item-card:last-child{border-bottom:none;}
+.item-card:last-child{margin-bottom:0;}
+.item-photo{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:var(--bg);}
 .item-emoji{
   flex:none;width:56px;height:56px;border-radius:var(--r-md);background:var(--bg);
   display:flex;align-items:center;justify-content:center;font-size:1.6rem;border:1px solid var(--line);
+  overflow:hidden;
 }
-.item-body{flex:1;min-width:0;}
+.item-emoji img{width:100%;height:100%;object-fit:cover;display:block;}
+.item-body{flex:1;min-width:0;padding:var(--sp-3) var(--sp-4) var(--sp-4);}
 .item-name{font-weight:700;font-size:.95rem;}
 .item-sub{font-size:.72rem;color:var(--ink-soft);font-style:italic;}
 .item-desc{font-size:.78rem;color:var(--ink-soft);margin-top:3px;line-height:1.5;}
-.item-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
-.item-price{font-weight:700;font-size:.9rem;}
+.item-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+.item-price{font-weight:700;font-size:.95rem;}
 .sold-badge{
   display:inline-block;font-size:.68rem;font-weight:700;color:var(--alert);
   background:var(--alert-bg);padding:3px 9px;border-radius:var(--r-pill);
 }
-.item-card.unavailable .item-emoji,.item-card.unavailable .item-name{opacity:.45;}
+.item-card.unavailable .item-photo{opacity:.5;filter:grayscale(.35);}
+.item-card.unavailable .item-name{opacity:.45;}
 .item-card.unavailable .item-desc{opacity:.45;}
 
 .stepper{display:flex;align-items:center;gap:10px;}
@@ -484,6 +489,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   function yen(n){ return "¥" + Number(n).toLocaleString("ja-JP"); }
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
   function findItem(id){ return state.menu.find(function(m){return m.id===id;}); }
+
+  // メニュー写真を後から添付できるようにするための準備。item.image が未設定の
+  // 間は、この共通プレースホルダー画像（お皿とカトラリーのシンプルな線画）を
+  // 表示する。管理画面の「画像URL」欄にURLを入れると、そちらに差し替わる。
+  var DEFAULT_ITEM_IMAGE = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#F3E5D0"/><circle cx="200" cy="150" r="82" fill="#FFFFFF" stroke="#E4DAC4" stroke-width="4"/><g fill="none" stroke="#C77D2E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><line x1="152" y1="108" x2="152" y2="150"/><line x1="141" y1="108" x2="141" y2="134"/><line x1="163" y1="108" x2="163" y2="134"/><line x1="152" y1="150" x2="152" y2="196"/><path d="M252 108 v42 a11 11 0 0 1 -11 11 h0 v33"/></g></svg>');
+  function itemImage(item){ return (item && item.image) ? item.image : DEFAULT_ITEM_IMAGE; }
   function cartCount(){ return state.cart.reduce(function(s,c){return s+c.qty;},0); }
   function cartTotal(){ return state.cart.reduce(function(s,c){ var it=findItem(c.itemId); return s + (it?it.price*c.qty:0); },0); }
 
@@ -568,7 +579,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     var desc = itemDesc(item);
     return (
       '<div class="item-card'+(item.available?'':' unavailable')+'">' +
-        '<div class="item-emoji">'+item.emoji+'</div>' +
+        '<img class="item-photo" src="'+esc(itemImage(item))+'" alt="" loading="lazy">' +
         '<div class="item-body">' +
           '<div class="item-name">'+esc(itemName(item))+'</div>' +
           '<div class="item-sub it-display">'+esc(item.sub)+'</div>' +
@@ -591,7 +602,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       if(!it) return '';
       return (
         '<div class="cart-row">' +
-          '<div class="item-emoji">'+it.emoji+'</div>' +
+          '<div class="item-emoji"><img src="'+esc(itemImage(it))+'" alt=""></div>' +
           '<div class="item-body">' +
             '<div class="cart-row-name">'+esc(itemName(it))+'</div>' +
             '<div class="cart-row-price tabular">'+yen(it.price)+' × '+c.qty+' = '+yen(it.price*c.qty)+'</div>' +
